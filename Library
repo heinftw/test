@@ -1,1 +1,2387 @@
 
+-- xanax | native Roblox UI | version 1
+-- UI only. No third-party assets, HTTP calls, or executor APIs.
+-- CONFIG defines the design; INITIAL_STATE is your exported profile.
+
+local CONFIG = {
+    ["Title"] = "xanax",
+    ["Version"] = 1,
+    ["Theme"] = {
+        ["Window"] = "#111111",
+        ["Panel"] = "#161616",
+        ["Border"] = "#0a0a0a",
+        ["Edge"] = "#1a1a1a",
+        ["Text"] = "#c8c8c8",
+        ["Muted"] = "#707070",
+        ["Accent"] = "#50c7ce",
+        ["Hover"] = "#1e1e1e",
+        ["Press"] = "#252525"
+    },
+    ["Tabs"] = {
+        {
+            ["id"] = "aimbot",
+            ["label"] = "Aimbot",
+            ["columns"] = {
+                {
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.enabled",
+                        ["label"] = "Enabled",
+                        ["default"] = false,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.teamCheck",
+                        ["label"] = "Team Check",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.visibleCheck",
+                        ["label"] = "Visible Check",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.ignoreKnocked",
+                        ["label"] = "Ignore Knocked",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "select",
+                        ["id"] = "aim.target",
+                        ["label"] = "Target Part:",
+                        ["default"] = "Head",
+                        ["options"] = {
+                            "Head",
+                            "Torso",
+                            "HumanoidRootPart"
+                        }
+                    },
+                    {
+                        ["type"] = "select",
+                        ["id"] = "aim.priority",
+                        ["label"] = "Target Priority:",
+                        ["default"] = "Closest to Cursor",
+                        ["options"] = {
+                            "Closest to Cursor",
+                            "Closest Player",
+                            "Lowest Health"
+                        }
+                    },
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "aim.fov",
+                        ["label"] = "FOV:",
+                        ["default"] = 120,
+                        ["min"] = 0,
+                        ["max"] = 360,
+                        ["step"] = 1,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.drawFov",
+                        ["label"] = "Draw FOV",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.filledFov",
+                        ["label"] = "Filled FOV",
+                        ["default"] = false,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.prediction",
+                        ["label"] = "Prediction",
+                        ["default"] = false,
+                        ["colors"] = {}
+                    }
+                },
+                {
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "aim.maxDistance",
+                        ["label"] = "Max Distance:",
+                        ["default"] = 1000,
+                        ["min"] = 0,
+                        ["max"] = 2000,
+                        ["step"] = 10,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "aim.smoothing",
+                        ["label"] = "Smoothing:",
+                        ["default"] = 8,
+                        ["min"] = 0,
+                        ["max"] = 20,
+                        ["step"] = 1,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "select",
+                        ["id"] = "aim.activation",
+                        ["label"] = "Activation:",
+                        ["default"] = "Hold",
+                        ["options"] = {
+                            "Hold",
+                            "Toggle"
+                        }
+                    },
+                    {
+                        ["type"] = "keybind",
+                        ["id"] = "aim.key",
+                        ["label"] = "Aim Key:",
+                        ["default"] = "Mouse 2",
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.sticky",
+                        ["label"] = "Sticky Aim",
+                        ["default"] = false,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "aim.wallCheck",
+                        ["label"] = "Wall Check",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    }
+                }
+            }
+        },
+        {
+            ["id"] = "player",
+            ["label"] = "Player ESP",
+            ["columns"] = {
+                {
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.name",
+                        ["label"] = "Name",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.distance",
+                        ["label"] = "Distance",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.box",
+                        ["label"] = "Box",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "select",
+                        ["id"] = "player.boxType",
+                        ["label"] = "Box Type:",
+                        ["default"] = "Full",
+                        ["options"] = {
+                            "Full",
+                            "Corners",
+                            "3D"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.skeleton",
+                        ["label"] = "Skeleton",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.health",
+                        ["label"] = "Health",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.shield",
+                        ["label"] = "Shield",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.teamId",
+                        ["label"] = "Team ID",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#fbf45b"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.oofArrow",
+                        ["label"] = "OOF Arrow",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "player.fov",
+                        ["label"] = "FOV:",
+                        ["default"] = 80,
+                        ["min"] = 0,
+                        ["max"] = 180,
+                        ["step"] = 1,
+                        ["narrow"] = true
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.lookDirection",
+                        ["label"] = "Look Direction",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.heldItem",
+                        ["label"] = "Held Item",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    }
+                },
+                {
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "player.maxDistance",
+                        ["label"] = "Max Distance:",
+                        ["default"] = 1000,
+                        ["min"] = 0,
+                        ["max"] = 1000,
+                        ["step"] = 10,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.ignoreFriendly",
+                        ["label"] = "Ignore Friendly",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.showKnocked",
+                        ["label"] = "Show Knocked",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.radar",
+                        ["label"] = "Radar",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "player.radarDistance",
+                        ["label"] = "Distance:",
+                        ["default"] = 200,
+                        ["min"] = 0,
+                        ["max"] = 1000,
+                        ["step"] = 10,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "player.radarSize",
+                        ["label"] = "Size:",
+                        ["default"] = 12,
+                        ["min"] = 1,
+                        ["max"] = 20,
+                        ["step"] = 1,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.radarPlayers",
+                        ["label"] = "Players",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "player.radarArcs",
+                        ["label"] = "Arcs",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    }
+                }
+            }
+        },
+        {
+            ["id"] = "entity",
+            ["label"] = "Entity ESP",
+            ["columns"] = {
+                {
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.enabled",
+                        ["label"] = "Enabled",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.name",
+                        ["label"] = "Name",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.distance",
+                        ["label"] = "Distance",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.box",
+                        ["label"] = "Box",
+                        ["default"] = false,
+                        ["colors"] = {
+                            "#ffffff",
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "select",
+                        ["id"] = "entity.boxType",
+                        ["label"] = "Box Type:",
+                        ["default"] = "Full",
+                        ["options"] = {
+                            "Full",
+                            "Corners",
+                            "3D"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.health",
+                        ["label"] = "Health",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.skeleton",
+                        ["label"] = "Skeleton",
+                        ["default"] = false,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.teamId",
+                        ["label"] = "Team ID",
+                        ["default"] = false,
+                        ["colors"] = {
+                            "#fbf45b"
+                        }
+                    }
+                },
+                {
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "entity.maxDistance",
+                        ["label"] = "Max Distance:",
+                        ["default"] = 1000,
+                        ["min"] = 0,
+                        ["max"] = 2000,
+                        ["step"] = 10,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.items",
+                        ["label"] = "Items",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.weapons",
+                        ["label"] = "Weapons",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.vehicles",
+                        ["label"] = "Vehicles",
+                        ["default"] = false,
+                        ["colors"] = {
+                            "#fbf45b"
+                        }
+                    },
+                    {
+                        ["type"] = "select",
+                        ["id"] = "entity.display",
+                        ["label"] = "Display:",
+                        ["default"] = "All entities",
+                        ["options"] = {
+                            "All entities",
+                            "Hostile only",
+                            "Friendly only"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.tracers",
+                        ["label"] = "Tracers",
+                        ["default"] = false,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "entity.arrows",
+                        ["label"] = "Offscreen Arrows",
+                        ["default"] = false,
+                        ["colors"] = {}
+                    }
+                }
+            }
+        },
+        {
+            ["id"] = "misc",
+            ["label"] = "Miscellaneous",
+            ["columns"] = {
+                {
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "misc.crosshair",
+                        ["label"] = "Crosshair",
+                        ["default"] = false,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "select",
+                        ["id"] = "misc.crosshairType",
+                        ["label"] = "Crosshair Type:",
+                        ["default"] = "Cross",
+                        ["options"] = {
+                            "Cross",
+                            "Dot",
+                            "Circle"
+                        }
+                    },
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "misc.crosshairSize",
+                        ["label"] = "Crosshair Size:",
+                        ["default"] = 5,
+                        ["min"] = 1,
+                        ["max"] = 15,
+                        ["step"] = 1,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "misc.hitMarker",
+                        ["label"] = "Hit Marker",
+                        ["default"] = true,
+                        ["colors"] = {
+                            "#ffffff"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "misc.customCursor",
+                        ["label"] = "Custom Cursor",
+                        ["default"] = false,
+                        ["colors"] = {
+                            "#50c7ce"
+                        }
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "misc.movement",
+                        ["label"] = "Movement Overlay",
+                        ["default"] = false,
+                        ["colors"] = {}
+                    }
+                },
+                {
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "misc.watermark",
+                        ["label"] = "Watermark",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "misc.clock",
+                        ["label"] = "Clock",
+                        ["default"] = false,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "misc.cameraShake",
+                        ["label"] = "Reduce Camera Shake",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "slider",
+                        ["id"] = "ui.opacity",
+                        ["label"] = "Menu Opacity:",
+                        ["default"] = 100,
+                        ["min"] = 60,
+                        ["max"] = 100,
+                        ["step"] = 1,
+                        ["narrow"] = false
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "misc.notifications",
+                        ["label"] = "Notifications",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "select",
+                        ["id"] = "misc.units",
+                        ["label"] = "Distance Units:",
+                        ["default"] = "Studs",
+                        ["options"] = {
+                            "Studs",
+                            "Meters",
+                            "Feet"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            ["id"] = "settings",
+            ["label"] = "Settings",
+            ["columns"] = {
+                {
+                    {
+                        ["type"] = "heading",
+                        ["label"] = "Interface"
+                    },
+                    {
+                        ["type"] = "toggle",
+                        ["id"] = "ui.animations",
+                        ["label"] = "Animations",
+                        ["default"] = true,
+                        ["colors"] = {}
+                    },
+                    {
+                        ["type"] = "keybind",
+                        ["id"] = "ui.menuKey",
+                        ["label"] = "Menu Key:",
+                        ["default"] = "Right Shift",
+                    },
+                    {
+                        ["type"] = "heading",
+                        ["label"] = "Background"
+                    },
+                    {
+                        ["type"] = "textbox",
+                        ["id"] = "ui.bgAsset",
+                        ["label"] = "Asset ID:",
+                        ["default"] = "",
+                    },
+                    {
+                        ["type"] = "action",
+                        ["label"] = "Apply Background",
+                        ["action"] = "applyBg",
+                        ["primary"] = false
+                    },
+                    {
+                        ["type"] = "action",
+                        ["label"] = "Remove Background",
+                        ["action"] = "removeBg",
+                        ["primary"] = false
+                    },
+                    {
+                        ["type"] = "heading",
+                        ["label"] = "Danger Zone"
+                    },
+                    {
+                        ["type"] = "action",
+                        ["label"] = "Unload UI",
+                        ["action"] = "unload",
+                        ["primary"] = false
+                    }
+                },
+                {}
+            }
+        }
+    }
+}
+
+local INITIAL_STATE = {
+    ["aim.enabled"] = false,
+    ["aim.teamCheck"] = true,
+    ["aim.visibleCheck"] = true,
+    ["aim.ignoreKnocked"] = true,
+    ["aim.target"] = "Head",
+    ["aim.priority"] = "Closest to Cursor",
+    ["aim.fov"] = 120,
+    ["aim.drawFov"] = true,
+    ["aim.drawFov.color.1"] = "#50c7ce",
+    ["aim.filledFov"] = false,
+    ["aim.prediction"] = false,
+    ["aim.maxDistance"] = 1000,
+    ["aim.smoothing"] = 8,
+    ["aim.activation"] = "Hold",
+    ["aim.key"] = "Mouse 2",
+    ["aim.sticky"] = false,
+    ["aim.wallCheck"] = true,
+    ["player.name"] = true,
+    ["player.name.color.1"] = "#ffffff",
+    ["player.name.color.2"] = "#50c7ce",
+    ["player.distance"] = true,
+    ["player.distance.color.1"] = "#ffffff",
+    ["player.distance.color.2"] = "#50c7ce",
+    ["player.box"] = true,
+    ["player.box.color.1"] = "#ffffff",
+    ["player.box.color.2"] = "#50c7ce",
+    ["player.boxType"] = "Full",
+    ["player.skeleton"] = true,
+    ["player.skeleton.color.1"] = "#ffffff",
+    ["player.skeleton.color.2"] = "#50c7ce",
+    ["player.health"] = true,
+    ["player.shield"] = true,
+    ["player.teamId"] = true,
+    ["player.teamId.color.1"] = "#fbf45b",
+    ["player.oofArrow"] = true,
+    ["player.oofArrow.color.1"] = "#ffffff",
+    ["player.oofArrow.color.2"] = "#50c7ce",
+    ["player.fov"] = 80,
+    ["player.lookDirection"] = true,
+    ["player.lookDirection.color.1"] = "#50c7ce",
+    ["player.heldItem"] = true,
+    ["player.heldItem.color.1"] = "#ffffff",
+    ["player.heldItem.color.2"] = "#50c7ce",
+    ["player.maxDistance"] = 1000,
+    ["player.ignoreFriendly"] = true,
+    ["player.showKnocked"] = true,
+    ["player.radar"] = true,
+    ["player.radar.color.1"] = "#50c7ce",
+    ["player.radarDistance"] = 200,
+    ["player.radarSize"] = 12,
+    ["player.radarPlayers"] = true,
+    ["player.radarArcs"] = true,
+    ["entity.enabled"] = true,
+    ["entity.name"] = true,
+    ["entity.name.color.1"] = "#ffffff",
+    ["entity.name.color.2"] = "#50c7ce",
+    ["entity.distance"] = true,
+    ["entity.distance.color.1"] = "#ffffff",
+    ["entity.distance.color.2"] = "#50c7ce",
+    ["entity.box"] = false,
+    ["entity.box.color.1"] = "#ffffff",
+    ["entity.box.color.2"] = "#50c7ce",
+    ["entity.boxType"] = "Full",
+    ["entity.health"] = true,
+    ["entity.skeleton"] = false,
+    ["entity.skeleton.color.1"] = "#50c7ce",
+    ["entity.teamId"] = false,
+    ["entity.teamId.color.1"] = "#fbf45b",
+    ["entity.maxDistance"] = 1000,
+    ["entity.items"] = true,
+    ["entity.items.color.1"] = "#50c7ce",
+    ["entity.weapons"] = true,
+    ["entity.weapons.color.1"] = "#50c7ce",
+    ["entity.vehicles"] = false,
+    ["entity.vehicles.color.1"] = "#fbf45b",
+    ["entity.display"] = "All entities",
+    ["entity.tracers"] = false,
+    ["entity.tracers.color.1"] = "#50c7ce",
+    ["entity.arrows"] = false,
+    ["misc.crosshair"] = false,
+    ["misc.crosshair.color.1"] = "#50c7ce",
+    ["misc.crosshairType"] = "Cross",
+    ["misc.crosshairSize"] = 5,
+    ["misc.hitMarker"] = true,
+    ["misc.hitMarker.color.1"] = "#ffffff",
+    ["misc.customCursor"] = false,
+    ["misc.customCursor.color.1"] = "#50c7ce",
+    ["misc.movement"] = false,
+    ["misc.watermark"] = true,
+    ["misc.clock"] = false,
+    ["misc.cameraShake"] = true,
+    ["ui.opacity"] = 100,
+    ["misc.notifications"] = true,
+    ["misc.units"] = "Studs",
+    ["ui.animations"] = true,
+    ["ui.menuKey"] = "Right Shift",
+    ["ui.scale"] = 70,
+    ["ui.bgAsset"] = "75288087294334"
+}
+
+-- Services and types -----------------------------------------------------------
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+export type MountOptions = {
+    Parent: PlayerGui?,
+    InitialState: {[string]: any}?,
+    OnChanged: ((string, any) -> ())?,
+}
+
+local XanaxUI = {}
+XanaxUI.__index = XanaxUI
+
+-- Reference units are converted from the current viewport, not used as a fixed window size.
+local DESIGN = { Width = 482, Height = 312, ContentWidth = 472, Gap = 8 }
+local HEIGHTS = { toggle = 14.4, slider = 24, select = 31, heading = 20, note = 38, action = 18, keybind = 27, textbox = 31 }
+local MENU_KEYS = {
+    ["RightShift"] = Enum.KeyCode.RightShift,
+    ["Insert"] = Enum.KeyCode.Insert,
+    ["Home"] = Enum.KeyCode.Home,
+    ["F4"] = Enum.KeyCode.F4,
+}
+
+local function resolveKeyCode(name)
+    if MENU_KEYS[name] then
+        return MENU_KEYS[name]
+    end
+    local ok, code = pcall(function() return Enum.KeyCode[name] end)
+    if ok then
+        return code
+    end
+    return nil
+end
+
+local function finite(value)
+    return type(value) == "number" and value == value and math.abs(value) < math.huge
+end
+
+local function isHex(value)
+    return type(value) == "string" and value:match("^#%x%x%x%x%x%x$") ~= nil
+end
+
+local function color(hex)
+    assert(isHex(hex), "Expected a six-digit hexadecimal color")
+    return Color3.fromRGB(
+        tonumber(hex:sub(2, 3), 16),
+        tonumber(hex:sub(4, 5), 16),
+        tonumber(hex:sub(6, 7), 16)
+    )
+end
+
+local function make(className, properties, parent)
+    local object = Instance.new(className)
+    local ok, message = pcall(function()
+        for property, value in pairs(properties) do
+            object[property] = value
+        end
+        object.Parent = parent
+    end)
+    if not ok then
+        object:Destroy()
+        error(string.format("Cannot create %s: %s", className, tostring(message)), 2)
+    end
+    return object
+end
+
+-- Validation and state ---------------------------------------------------------
+
+function XanaxUI:_normalise(id, value)
+    local definition = self._definitions[id]
+    if not definition then
+        return false, "Unknown setting: " .. tostring(id)
+    end
+    if definition.type == "toggle" then
+        if type(value) ~= "boolean" then
+            return false, definition.label .. " must be a boolean"
+        end
+        return true, value
+    elseif definition.type == "slider" then
+        if not finite(value) or value < definition.min or value > definition.max then
+            return false, string.format("%s must be between %s and %s", definition.label, definition.min, definition.max)
+        end
+        local stepped = definition.min + math.floor((value - definition.min) / definition.step + 0.5) * definition.step
+        return true, math.clamp(stepped, definition.min, definition.max)
+    elseif definition.type == "select" then
+        if type(value) ~= "string" or not table.find(definition.options, value) then
+            return false, "Invalid selection for " .. definition.label
+        end
+        return true, value
+    elseif definition.type == "color" then
+        if typeof(value) == "Color3" then
+            value = string.format("#%02x%02x%02x", math.round(value.R * 255), math.round(value.G * 255), math.round(value.B * 255))
+        end
+        if not isHex(value) then
+            return false, "Use a six-digit hex color, such as #50c7ce"
+        end
+        return true, string.lower(value)
+    elseif definition.type == "keybind" then
+        if type(value) ~= "string" then
+            return false, definition.label .. " must be a string"
+        end
+        return true, value
+    elseif definition.type == "textbox" then
+        if value == nil then
+            value = ""
+        end
+        if type(value) ~= "string" then
+            return false, definition.label .. " must be a string"
+        end
+        return true, value
+    end
+    return false, "Unsupported setting type"
+end
+
+function XanaxUI:_define(definition)
+    assert(type(definition.id) == "string" and not self._definitions[definition.id], "Control IDs must be unique strings")
+    if definition.type == "slider" then
+        assert(finite(definition.min) and finite(definition.max) and definition.max > definition.min, "Invalid slider bounds")
+        assert(finite(definition.step) and definition.step > 0, "Slider step must be positive")
+    elseif definition.type == "select" then
+        assert(type(definition.options) == "table" and #definition.options > 0, "Select controls need options")
+        for _, option in ipairs(definition.options) do
+            assert(type(option) == "string", "Select options must be strings")
+        end
+    end
+    self._definitions[definition.id] = definition
+    local ok, value = self:_normalise(definition.id, definition.default)
+    assert(ok, tostring(value))
+    self._defaults[definition.id] = value
+end
+
+function XanaxUI:_prepare(initialState)
+    for name, hex in pairs(CONFIG.Theme) do
+        self._theme[name] = color(hex)
+    end
+    for _, tab in ipairs(CONFIG.Tabs) do
+        assert(type(tab.id) == "string" and not self._tabDefinitions[tab.id], "Tab IDs must be unique")
+        assert(type(tab.label) == "string" and type(tab.columns) == "table" and #tab.columns == 2, "Each tab needs two columns")
+        self._tabDefinitions[tab.id] = tab
+        for _, column in ipairs(tab.columns) do
+            for _, definition in ipairs(column) do
+                assert(HEIGHTS[definition.type] and type(definition.label) == "string", "Invalid control definition")
+                if definition.id then
+                    self:_define(definition)
+                end
+                for index, hex in ipairs(definition.colors or {}) do
+                    self:_define({
+                        id = definition.id .. ".color." .. index,
+                        label = definition.label .. " color " .. index,
+                        type = "color",
+                        default = hex,
+                    })
+                end
+            end
+        end
+    end
+    self:_define({ id = "ui.scale", label = "UI Scale", type = "slider", default = 70, min = 70, max = 100, step = 5 })
+    self._state = table.clone(self._defaults)
+    if initialState then
+        assert(type(initialState) == "table", "InitialState must be a table")
+        for id, value in pairs(initialState) do
+            local ok, normalised = self:_normalise(id, value)
+            assert(ok, "Invalid InitialState: " .. tostring(normalised))
+            self._state[id] = normalised
+        end
+    end
+end
+
+function XanaxUI:GetValue(id: string)
+    assert(not self._destroyed, "This UI has been destroyed")
+    assert(self._definitions[id], "Unknown setting: " .. tostring(id))
+    return self._state[id]
+end
+
+function XanaxUI:GetState()
+    assert(not self._destroyed, "This UI has been destroyed")
+    return table.clone(self._state)
+end
+
+function XanaxUI:SetValue(id: string, value: any)
+    if self._destroyed then
+        return false, "This UI has been destroyed"
+    end
+    local ok, normalised = self:_normalise(id, value)
+    if not ok then
+        return false, normalised
+    end
+    if self._state[id] == normalised then
+        return true
+    end
+    self._state[id] = normalised
+    if self._views[id] then
+        self._views[id](normalised)
+    end
+    if id:sub(1, 3) == "ui." then
+        self:_applyPreferences()
+    end
+    self._changed:Fire(id, normalised)
+    return true
+end
+
+function XanaxUI:_replaceState(nextState)
+    local previous = self._state
+    self._state = nextState
+    for id, view in pairs(self._views) do
+        view(nextState[id])
+    end
+    self:_applyPreferences()
+    -- Commit the entire profile before notifying consumers, so callbacks never see partial imports.
+    for id, value in pairs(nextState) do
+        if previous[id] ~= value then
+            self._changed:Fire(id, value)
+        end
+    end
+end
+
+function XanaxUI:Reset()
+    if self._destroyed then
+        return false, "This UI has been destroyed"
+    end
+    self:_replaceState(table.clone(self._defaults))
+    return true
+end
+
+function XanaxUI:ExportProfile()
+    if self._destroyed then
+        return nil, "This UI has been destroyed"
+    end
+    local ok, result = pcall(function()
+        return HttpService:JSONEncode({ version = CONFIG.Version, values = self:GetState() })
+    end)
+    if not ok then
+        return nil, tostring(result)
+    end
+    return result
+end
+
+function XanaxUI:ImportProfile(json: string)
+    if self._destroyed then
+        return false, "This UI has been destroyed"
+    end
+    if type(json) ~= "string" or #json > 65536 then
+        return false, "A profile must be JSON text smaller than 64 KB"
+    end
+    local decoded, profile = pcall(function()
+        return HttpService:JSONDecode(json)
+    end)
+    if not decoded or type(profile) ~= "table" or profile.version ~= CONFIG.Version or type(profile.values) ~= "table" then
+        return false, "Use a version 1 profile exported from this panel"
+    end
+    local nextState = table.clone(self._defaults)
+    for id, value in pairs(profile.values) do
+        local ok, normalised = self:_normalise(id, value)
+        if not ok then
+            return false, normalised
+        end
+        nextState[id] = normalised
+    end
+    self:_replaceState(nextState)
+    return true
+end
+
+-- Lifetime-safe connections and animation ------------------------------------
+
+function XanaxUI:_connect(signal, callback, bucket)
+    local connection = signal:Connect(function(...)
+        if not self._destroyed then
+            callback(...)
+        end
+    end)
+    table.insert(bucket or self._connections, connection)
+    return connection
+end
+
+function XanaxUI:_animationsEnabled()
+    return self._state["ui.animations"] and not GuiService.ReducedMotionEnabled
+end
+
+function XanaxUI:_tween(object, properties, duration)
+    if self._destroyed or not object.Parent then
+        return
+    end
+    local previous = self._tweens[object]
+    if previous then
+        previous:Cancel()
+        self._tweens[object] = nil
+    end
+    if not self:_animationsEnabled() or duration == 0 then
+        for property, value in pairs(properties) do
+            object[property] = value
+        end
+        return
+    end
+    local tween = TweenService:Create(object, TweenInfo.new(duration or 0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties)
+    self._tweens[object] = tween
+    tween.Completed:Once(function()
+        if self._tweens[object] == tween then
+            self._tweens[object] = nil
+        end
+    end)
+    tween:Play()
+end
+
+function XanaxUI:_bindButton(button, callback, base, bucket, isSwatch)
+    button.AutoButtonColor = false
+    button.Selectable = true
+    local hovered, pressed = false, false
+    local function paint()
+        if not button.Parent then
+            return
+        end
+        local background, transparency, textColor = base()
+        if pressed then
+            background = isSwatch and background:Lerp(Color3.new(1, 1, 1), 0.35) or self._theme.Press
+            transparency = math.min(transparency, 0.25)
+        elseif hovered then
+            background = isSwatch and background:Lerp(Color3.new(1, 1, 1), 0.18) or self._theme.Hover
+            transparency = math.min(transparency, 0.35)
+            textColor = Color3.fromRGB(231, 242, 242)
+        end
+        self:_tween(button, { BackgroundColor3 = background, BackgroundTransparency = transparency, TextColor3 = textColor }, 0.11)
+    end
+    self:_connect(button.MouseEnter, function() hovered = true; paint() end, bucket)
+    self:_connect(button.MouseLeave, function() hovered = false; pressed = false; paint() end, bucket)
+    self:_connect(button.SelectionGained, function() hovered = true; paint() end, bucket)
+    self:_connect(button.SelectionLost, function() hovered = false; pressed = false; paint() end, bucket)
+    self:_connect(button.InputBegan, function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch or input.KeyCode == Enum.KeyCode.ButtonA or input.KeyCode == Enum.KeyCode.Return then
+            pressed = true
+            paint()
+        end
+    end, bucket)
+    self:_connect(button.InputEnded, function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch or input.KeyCode == Enum.KeyCode.ButtonA or input.KeyCode == Enum.KeyCode.Return then
+            pressed = false
+            paint()
+        end
+    end, bucket)
+    self:_connect(button.Activated, function()
+        pressed = false
+        callback()
+        paint()
+    end, bucket)
+    paint()
+    return paint
+end
+
+function XanaxUI:_text(className, parent, name, value, size, properties)
+    local settings = {
+        Name = name,
+        Text = value,
+        Font = Enum.Font.Code,
+        TextSize = size,
+        TextColor3 = self._theme.Text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        TextTruncate = Enum.TextTruncate.AtEnd,
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        AutoLocalize = false,
+        RichText = false,
+    }
+    for key, property in pairs(properties or {}) do
+        settings[key] = property
+    end
+    if className == "TextButton" then
+        settings.AutoButtonColor = false
+    end
+    local object = make(className, settings, parent)
+    table.insert(self._textMetrics, { object = object, size = size, isTab = name:sub(1, 4) == "Tab_" })
+    return object
+end
+
+function XanaxUI:_row(parent, definition, order)
+    local row = make("Frame", {
+        Name = definition.id or (definition.type .. order),
+        LayoutOrder = order,
+        Size = UDim2.new(1, 0, 0, HEIGHTS[definition.type]),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+    }, parent)
+    table.insert(self._rowMetrics, { object = row, height = HEIGHTS[definition.type] })
+    return row
+end
+
+-- Native control factories -----------------------------------------------------
+
+function XanaxUI:_buildToggle(parent, definition, order)
+    local row = self:_row(parent, definition, order)
+    local colorCount = #(definition.colors or {})
+    local buttonWidth = 224 - colorCount * 11
+    local toggle = self:_text("TextButton", row, "Toggle", "", 8.5, { Size = UDim2.fromScale(buttonWidth / 224, 1) })
+    local square = make("Frame", {
+        Name = "Indicator",
+        AnchorPoint = Vector2.new(0, 0.5),
+        Position = UDim2.fromScale(0, 0.5),
+        Size = UDim2.fromScale(7.4 / buttonWidth, 7.4 / 14.4),
+        BackgroundColor3 = self._theme.Accent,
+        BorderColor3 = Color3.fromRGB(17, 26, 27),
+        BorderSizePixel = 1,
+    }, toggle)
+    self:_text("TextLabel", toggle, "Label", definition.label, 8.5, {
+        Position = UDim2.fromScale(11.4 / buttonWidth, 0),
+        Size = UDim2.fromScale(1 - 11.4 / buttonWidth, 1),
+    })
+    self._views[definition.id] = function(value)
+        self:_tween(square, { BackgroundColor3 = value and self._theme.Accent or Color3.fromRGB(49, 55, 56) }, 0.13)
+        toggle:SetAttribute("Checked", value)
+    end
+    self._views[definition.id](self._state[definition.id])
+    self:_bindButton(toggle, function()
+        self:SetValue(definition.id, not self._state[definition.id])
+    end, function() return self._theme.Panel, 1, self._theme.Text end)
+    for index = 1, colorCount do
+        local id = definition.id .. ".color." .. index
+        local swatch = self:_text("TextButton", row, "Color_" .. index, "", 8, {
+            AnchorPoint = Vector2.new(1, 0.5),
+            Position = UDim2.fromScale(1 - (colorCount - index) * 11 / 224, 0.5),
+            Size = UDim2.fromScale(8 / 224, 7 / 14.4),
+            BackgroundTransparency = 0,
+            BackgroundColor3 = color(self._state[id]),
+            BorderSizePixel = 1,
+            BorderColor3 = self._theme.Border,
+        })
+        local paint = self:_bindButton(swatch, function()
+            self:_openColor(id, definition.label)
+        end, function() return color(self._state[id]), 0, self._theme.Text end, nil, true)
+        self._views[id] = function() paint() end
+    end
+end
+
+function XanaxUI:_buildSelect(parent, definition, order)
+    local row = self:_row(parent, definition, order)
+    self:_text("TextLabel", row, "Label", definition.label, 8.1, { Size = UDim2.fromScale(1, 12 / 31) })
+    local selectButton = self:_text("TextButton", row, "Select", self._state[definition.id], 8.5, {
+        Position = UDim2.fromScale(0, 12 / 31),
+        Size = UDim2.fromScale(0.565, 14 / 31),
+        BackgroundTransparency = 0,
+        BackgroundColor3 = Color3.fromRGB(48, 48, 48),
+        BorderSizePixel = 1,
+        BorderColor3 = self._theme.Border,
+    })
+    make("UIPadding", { PaddingLeft = UDim.new(0.025, 0), PaddingRight = UDim.new(0.025, 0) }, selectButton)
+    self._views[definition.id] = function(value) selectButton.Text = value end
+    self:_bindButton(selectButton, function() self:_openSelect(definition, selectButton) end, function()
+        return Color3.fromRGB(48, 48, 48), 0, self._theme.Text
+    end)
+end
+
+function XanaxUI:_buildSlider(parent, definition, order)
+    local row = self:_row(parent, definition, order)
+    local content = make("Frame", {
+        Name = "SliderContent",
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.fromScale(definition.narrow and 0.97 or 1, 1),
+    }, row)
+    local label = self:_text("TextLabel", content, "Value", "", 7.7, { Size = UDim2.fromScale(1, 0.5) })
+    local decrement = self:_text("TextButton", content, "Decrease", "-", 9, {
+        Position = UDim2.fromScale(0, 0.5),
+        Size = UDim2.fromScale(8 / 224, 10 / 24),
+        TextXAlignment = Enum.TextXAlignment.Center,
+    })
+    local increment = self:_text("TextButton", content, "Increase", "+", 9, {
+        Position = UDim2.fromScale(216 / 224, 0.5),
+        Size = UDim2.fromScale(8 / 224, 10 / 24),
+        TextXAlignment = Enum.TextXAlignment.Center,
+    })
+    local hitArea = self:_text("TextButton", content, "Range_" .. definition.id, "", 8, {
+        Position = UDim2.fromScale(12 / 224, 0.46),
+        Size = UDim2.fromScale(200 / 224, 12 / 24),
+        Active = true,
+    })
+    local track = make("Frame", {
+        Name = "Track",
+        AnchorPoint = Vector2.new(0, 0.5),
+        Position = UDim2.fromScale(0, 0.5),
+        Size = UDim2.fromScale(1, 5 / 12),
+        BackgroundColor3 = Color3.fromRGB(51, 51, 51),
+        BorderSizePixel = 1,
+        BorderColor3 = self._theme.Border,
+    }, hitArea)
+    local fill = make("Frame", {
+        Name = "Fill",
+        Position = UDim2.fromOffset(1, 1),
+        Size = UDim2.new(0, 0, 1, -2),
+        BackgroundColor3 = self._theme.Accent,
+        BorderSizePixel = 0,
+    }, track)
+    self._views[definition.id] = function(value)
+        local ratio = (value - definition.min) / (definition.max - definition.min)
+        label.Text = definition.label .. " " .. tostring(value)
+        hitArea:SetAttribute("Value", value)
+        decrement.TextTransparency = value <= definition.min and 0.45 or 0
+        increment.TextTransparency = value >= definition.max and 0.45 or 0
+        self:_tween(fill, { Size = UDim2.new(ratio, -2 * ratio, 1, -2) }, self._activeDrag and 0 or 0.09)
+    end
+    self._views[definition.id](self._state[definition.id])
+    local function step(direction)
+        self:SetValue(definition.id, math.clamp(self._state[definition.id] + definition.step * direction, definition.min, definition.max))
+    end
+    local function base() return self._theme.Panel, 1, self._theme.Text end
+    self:_bindButton(decrement, function() step(-1) end, base)
+    self:_bindButton(increment, function() step(1) end, base)
+    self:_bindButton(hitArea, function() end, base)
+    self._sliderButtons[hitArea] = step
+    self:_connect(hitArea.MouseEnter, function()
+        self._hoveredSlider = hitArea
+    end)
+    self:_connect(hitArea.MouseLeave, function()
+        if self._hoveredSlider == hitArea then
+            self._hoveredSlider = nil
+        end
+    end)
+    pcall(function()
+        hitArea.SelectionLeft = hitArea
+        hitArea.SelectionRight = hitArea
+    end)
+    self:_connect(hitArea.InputBegan, function(input)
+        if self._modal or self._activeDrag then
+            return
+        end
+        if input.UserInputType == Enum.UserInputType.MouseButton2 then
+            local absPos = hitArea.AbsolutePosition
+            local absSize = hitArea.AbsoluteSize
+            local overlay = make("Frame", {
+                Name = "SliderInput",
+                Position = UDim2.fromOffset(0, 0),
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundColor3 = self._theme.Panel,
+                BorderSizePixel = 1,
+                BorderColor3 = self._theme.Accent,
+                ZIndex = 10,
+            }, hitArea)
+            local box = Instance.new("TextBox")
+            box.Name = "Input"
+            box.Size = UDim2.new(1, 0, 1, 0)
+            box.BackgroundTransparency = 1
+            box.Text = tostring(self._state[definition.id])
+            box.Font = Enum.Font.Code
+            box.TextSize = 9
+            box.TextColor3 = self._theme.Accent
+            box.TextXAlignment = Enum.TextXAlignment.Center
+            box.ClearTextOnFocus = true
+            box.ZIndex = 11
+            box.Parent = overlay
+            box:CaptureFocus()
+            local function commit()
+                local num = tonumber(box.Text)
+                if num then
+                    self:SetValue(definition.id, math.clamp(num, definition.min, definition.max))
+                end
+                overlay:Destroy()
+            end
+            self:_connect(box.FocusLost, function(enterPressed)
+                commit()
+            end)
+            return
+        end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            self._activeDrag = { definition = definition, target = hitArea, input = input }
+            self:_updateDrag(input.Position)
+        end
+    end)
+end
+
+function XanaxUI:_buildKeybind(parent, definition, order)
+    local row = self:_row(parent, definition, order)
+    self:_text("TextLabel", row, "Label", definition.label, 8.1, { Size = UDim2.fromScale(1, 12 / 27) })
+    local btn = self:_text("TextButton", row, "Keybind", self._state[definition.id], 8.5, {
+        Position = UDim2.fromScale(0, 12 / 27),
+        Size = UDim2.fromScale(0.565, 14 / 27),
+        BackgroundTransparency = 0,
+        BackgroundColor3 = Color3.fromRGB(48, 48, 48),
+        BorderSizePixel = 1,
+        BorderColor3 = self._theme.Border,
+    })
+    make("UIPadding", { PaddingLeft = UDim.new(0.025, 0), PaddingRight = UDim.new(0.025, 0) }, btn)
+    self._views[definition.id] = function(value) btn.Text = value end
+    local listening = false
+    local listenerConn
+    self:_bindButton(btn, function()
+        if listening then
+            return
+        end
+        listening = true
+        btn.Text = "..."
+        btn.BackgroundColor3 = self._theme.Accent
+        btn.TextColor3 = Color3.new(0, 0, 0)
+        listenerConn = self:_connect(UserInputService.InputBegan, function(input, processed)
+            if processed then
+                return
+            end
+            local keyName
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                keyName = input.KeyCode.Name
+            elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+                keyName = "Mouse 1"
+            elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+                keyName = "Mouse 2"
+            elseif input.UserInputType == Enum.UserInputType.MouseButton3 then
+                keyName = "Mouse 3"
+            end
+            if keyName then
+                listening = false
+                if listenerConn then
+                    listenerConn:Disconnect()
+                    listenerConn = nil
+                end
+                self:SetValue(definition.id, keyName)
+                btn.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+                btn.TextColor3 = self._theme.Text
+            end
+        end)
+    end, function()
+        return Color3.fromRGB(48, 48, 48), 0, self._theme.Text
+    end)
+end
+
+function XanaxUI:_buildTextbox(parent, definition, order)
+    local row = self:_row(parent, definition, order)
+    self:_text("TextLabel", row, "Label", definition.label, 8.1, { Size = UDim2.fromScale(1, 12 / 31) })
+    local box = Instance.new("TextBox")
+    box.Name = "Textbox"
+    box.Position = UDim2.new(0, 0, 12 / 31, 0)
+    box.Size = UDim2.new(0.565, 0, 14 / 31, 0)
+    box.BackgroundTransparency = 0
+    box.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+    box.BorderSizePixel = 1
+    box.BorderColor3 = self._theme.Border
+    box.Text = self._state[definition.id] or ""
+    box.Font = Enum.Font.Code
+    box.TextSize = 8.5
+    box.TextColor3 = self._theme.Text
+    box.TextXAlignment = Enum.TextXAlignment.Left
+    box.ClearTextOnFocus = false
+    box.Selectable = true
+    box.Parent = row
+    make("UIPadding", { PaddingLeft = UDim.new(0.025, 0), PaddingRight = UDim.new(0.025, 0) }, box)
+    self._views[definition.id] = function(value) box.Text = value end
+    self:_connect(box.FocusLost, function()
+        self:SetValue(definition.id, box.Text)
+    end)
+end
+
+function XanaxUI:_buildControl(parent, definition, order)
+    if definition.type == "toggle" then
+        self:_buildToggle(parent, definition, order)
+    elseif definition.type == "select" then
+        self:_buildSelect(parent, definition, order)
+    elseif definition.type == "slider" then
+        self:_buildSlider(parent, definition, order)
+    elseif definition.type == "keybind" then
+        self:_buildKeybind(parent, definition, order)
+    elseif definition.type == "textbox" then
+        self:_buildTextbox(parent, definition, order)
+    else
+        local row = self:_row(parent, definition, order)
+        if definition.type == "action" then
+            local actionButton = self:_text("TextButton", row, "Action", definition.label, 8, {
+                Size = UDim2.new(1, -6, 1, -4),
+                Position = UDim2.new(0, 3, 0, 2),
+                BackgroundTransparency = 0,
+                BackgroundColor3 = Color3.fromRGB(44, 48, 48),
+                BorderSizePixel = 1,
+                BorderColor3 = Color3.fromRGB(68, 78, 78),
+            })
+            make("UIPadding", { PaddingLeft = UDim.new(0.03, 0) }, actionButton)
+            self:_bindButton(actionButton, function() self:_handleAction(definition.action) end, function()
+                return Color3.fromRGB(44, 48, 48), 0, self._theme.Text
+            end)
+        else
+            self:_text("TextLabel", row, "Label", definition.label, definition.type == "heading" and 8.5 or 7.8, {
+                Size = UDim2.fromScale(1, 0.9),
+                TextWrapped = definition.type == "note",
+                TextTruncate = Enum.TextTruncate.None,
+                TextColor3 = definition.type == "heading" and Color3.fromRGB(220, 224, 225) or self._theme.Muted,
+                TextYAlignment = Enum.TextYAlignment.Top,
+            })
+        end
+    end
+end
+
+-- Popovers and focus management -------------------------------------------------
+
+function XanaxUI:_closeModal()
+    local modal = self._modal
+    if not modal then
+        return
+    end
+    self._modal = nil
+    local focused = UserInputService:GetFocusedTextBox()
+    if focused and focused:IsDescendantOf(modal.root) then
+        focused:ReleaseFocus(false)
+    end
+    for _, connection in ipairs(modal.connections) do
+        connection:Disconnect()
+    end
+    for object, tween in pairs(self._tweens) do
+        if object:IsDescendantOf(modal.root) then
+            tween:Cancel()
+            self._tweens[object] = nil
+        end
+    end
+    modal.root:Destroy()
+end
+
+function XanaxUI:_modalRoot(dim)
+    self:_closeModal()
+    self._activeDrag = nil
+    local root = make("Frame", {
+        Name = "ModalLayer",
+        Size = UDim2.fromScale(1, 1),
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        BackgroundTransparency = dim and 0.4 or 1,
+        BorderSizePixel = 0,
+        ZIndex = 50,
+    }, self._viewport)
+    local modal = { root = root, connections = {} }
+    self._modal = modal
+    local backdrop = make("TextButton", {
+        Name = "Dismiss",
+        Size = UDim2.fromScale(1, 1),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Text = "",
+        AutoButtonColor = false,
+        Selectable = false,
+        ZIndex = 1,
+    }, root)
+    self:_connect(backdrop.Activated, function() self:_closeModal() end, modal.connections)
+    return modal
+end
+
+function XanaxUI:_modalText(className, parent, text, properties)
+    local settings = {
+        Text = text,
+        Font = Enum.Font.Code,
+        TextSize = math.clamp((self._unit or 1) * 9, 12, 17),
+        TextColor3 = self._theme.Text,
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        AutoLocalize = false,
+        RichText = false,
+    }
+    for key, value in pairs(properties or {}) do
+        settings[key] = value
+    end
+    if className == "TextButton" then
+        settings.AutoButtonColor = false
+    end
+    return make(className, settings, parent)
+end
+
+function XanaxUI:_openSelect(definition, owner)
+    local modal = self:_modalRoot(false)
+    local viewport = self._viewport.AbsoluteSize
+    local relativePosition = owner.AbsolutePosition - self._viewport.AbsolutePosition
+    local itemHeight = math.clamp(owner.AbsoluteSize.Y * 1.5, 25, 42)
+    local width = math.min(math.max(owner.AbsoluteSize.X, 150), viewport.X - 12)
+    local height = math.min(#definition.options * itemHeight + 4, viewport.Y * 0.65)
+    local x = math.clamp(relativePosition.X, 6, math.max(6, viewport.X - width - 6))
+    local y = relativePosition.Y + owner.AbsoluteSize.Y + 3
+    if y + height > viewport.Y - 6 then
+        y = math.max(6, relativePosition.Y - height - 3)
+    end
+    local list = make("ScrollingFrame", {
+        Name = "Options",
+        Position = UDim2.fromOffset(x, y),
+        Size = UDim2.fromOffset(width, height),
+        BackgroundColor3 = self._theme.Panel,
+        BorderColor3 = self._theme.Edge,
+        BorderSizePixel = 1,
+        CanvasSize = UDim2.new(1, 0, 0, #definition.options * itemHeight + 4),
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = self._theme.Accent,
+        ScrollingDirection = Enum.ScrollingDirection.Y,
+        Active = true,
+        ZIndex = 2,
+    }, modal.root)
+    make("UIStroke", { Color = Color3.new(1, 1, 1), Thickness = 1, Transparency = 0.7 }, list)
+    make("UICorner", { CornerRadius = UDim.new(0, 3) }, list)
+    make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }, list)
+    make("UIPadding", { PaddingLeft = UDim.new(0, 2), PaddingRight = UDim.new(0, 2), PaddingTop = UDim.new(0, 2) }, list)
+    for index, option in ipairs(definition.options) do
+        local selected = self._state[definition.id] == option
+        local item = self:_modalText("TextButton", list, option, {
+            Name = "Option_" .. index,
+            LayoutOrder = index,
+            Size = UDim2.new(1, -4, 0, itemHeight),
+            BackgroundTransparency = 0,
+            TextColor3 = selected and self._theme.Accent or self._theme.Text,
+        })
+        make("UIPadding", { PaddingLeft = UDim.new(0, 7) }, item)
+        self:_bindButton(item, function()
+            self:SetValue(definition.id, option)
+            self:_closeModal()
+        end, function()
+            return self._theme.Panel, 0, selected and self._theme.Accent or self._theme.Text
+        end,         modal.connections)
+    end
+end
+
+function XanaxUI:_dialog(options)
+    local modal = self:_modalRoot(true)
+    local isProfile = options.kind == "profile"
+    local dialog = make("CanvasGroup", {
+        Name = "Dialog",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.fromScale(0.5, 0.5),
+        Size = UDim2.fromScale(0.88, isProfile and 0.78 or 0.57),
+        BackgroundColor3 = self._theme.Panel,
+        BorderColor3 = self._theme.Edge,
+        BorderSizePixel = 1,
+        Active = true,
+        ZIndex = 2,
+        GroupTransparency = self:_animationsEnabled() and 0.35 or 0,
+    }, modal.root)
+    make("UISizeConstraint", { MinSize = Vector2.new(250, 180), MaxSize = Vector2.new(650, isProfile and 520 or 360) }, dialog)
+    self:_modalText("TextLabel", dialog, options.title, {
+        Name = "Title", Position = UDim2.fromScale(0.045, 0.035), Size = UDim2.fromScale(0.81, 0.11), TextColor3 = Color3.fromRGB(221, 234, 234),
+    })
+    local message = self:_modalText("TextLabel", dialog, options.description, {
+        Name = "Description", Position = UDim2.fromScale(0.045, 0.17), Size = UDim2.fromScale(0.91, isProfile and 0.13 or 0.24), TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top,
+    })
+    local field = self:_modalText("TextBox", dialog, options.value or "", {
+        Name = "Input",
+        Position = UDim2.fromScale(0.045, isProfile and 0.33 or 0.45),
+        Size = UDim2.fromScale(0.91, isProfile and 0.44 or 0.13),
+        BackgroundTransparency = 0,
+        BackgroundColor3 = Color3.fromRGB(28, 32, 32),
+        BorderSizePixel = 1,
+        BorderColor3 = Color3.fromRGB(76, 95, 96),
+        TextWrapped = isProfile,
+        TextYAlignment = isProfile and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center,
+        MultiLine = isProfile,
+        ClearTextOnFocus = false,
+        Selectable = true,
+        Visible = options.kind == "color" or isProfile,
+    })
+    make("UIPadding", { PaddingLeft = UDim.new(0.025, 0), PaddingRight = UDim.new(0.025, 0), PaddingTop = UDim.new(0.02, 0) }, field)
+    if options.kind == "info" then
+        message.Size = UDim2.fromScale(0.91, 0.61)
+    end
+    local function base() return Color3.fromRGB(45, 56, 57), 0, self._theme.Text end
+    local cancel = self:_modalText("TextButton", dialog, "Cancel", {
+        Name = "Cancel", Position = UDim2.fromScale(0.49, 0.85), Size = UDim2.fromScale(0.21, 0.1), BackgroundTransparency = 0,
+        TextXAlignment = Enum.TextXAlignment.Center, Visible = options.kind ~= "info",
+    })
+    local confirm = self:_modalText("TextButton", dialog, options.confirmLabel or "Apply", {
+        Name = "Confirm", Position = UDim2.fromScale(0.73, 0.85), Size = UDim2.fromScale(0.225, 0.1), BackgroundTransparency = 0,
+        TextXAlignment = Enum.TextXAlignment.Center,
+    })
+    local close = self:_modalText("TextButton", dialog, "x", {
+        Name = "Close", Position = UDim2.fromScale(0.89, 0.035), Size = UDim2.fromScale(0.065, 0.11), TextXAlignment = Enum.TextXAlignment.Center,
+    })
+    self:_bindButton(cancel, function() self:_closeModal() end, base, modal.connections)
+    self:_bindButton(close, function() self:_closeModal() end, base, modal.connections)
+    self:_bindButton(confirm, function()
+        if #field.Text > 65536 then
+            message.Text = "Input must be smaller than 64 KB"
+            message.TextColor3 = Color3.fromRGB(231, 157, 143)
+            return
+        end
+        local called, ok, errorMessage = pcall(options.onConfirm, field.Text)
+        if called and ok then
+            self:_closeModal()
+        else
+            message.Text = tostring(called and errorMessage or ok)
+            message.TextColor3 = Color3.fromRGB(231, 157, 143)
+        end
+    end, base, modal.connections)
+    if options.kind == "color" then
+        field.Size = UDim2.fromScale(0.65, 0.13)
+        local preview = make("Frame", {
+            Name = "ColorPreview", Position = UDim2.fromScale(0.73, 0.45), Size = UDim2.fromScale(0.225, 0.13),
+            BackgroundColor3 = color(options.value), BorderSizePixel = 1, BorderColor3 = self._theme.Border,
+        }, dialog)
+        local function updatePreview()
+            local hex = field.Text
+            if hex:sub(1, 1) ~= "#" then
+                hex = "#" .. hex
+            end
+            if isHex(hex) then
+                self:_tween(preview, { BackgroundColor3 = color(hex) }, 0.1)
+            end
+        end
+        self:_connect(field:GetPropertyChangedSignal("Text"), updatePreview, modal.connections)
+        local palette = { "#ffffff", "#50c7ce", "#fbf45b", "#9cdf87", "#e79383", "#b5a1e5", "#819ee6", "#333333" }
+        for index, hex in ipairs(palette) do
+            local swatch = self:_modalText("TextButton", dialog, "", {
+                Name = "Preset_" .. index,
+                Position = UDim2.fromScale(0.045 + (index - 1) * 0.116, 0.66), Size = UDim2.fromScale(0.095, 0.09),
+                BackgroundTransparency = 0, BackgroundColor3 = color(hex), BorderSizePixel = 1, BorderColor3 = self._theme.Border,
+            })
+            self:_bindButton(swatch, function() field.Text = hex end, function() return color(hex), 0, self._theme.Text end, modal.connections, true)
+        end
+    end
+    self:_tween(dialog, { GroupTransparency = 0 }, 0.16)
+    return field
+end
+
+function XanaxUI:_openColor(id, label)
+    self:_dialog({
+        title = label .. " color", kind = "color", value = self._state[id],
+        description = "Enter a six-digit hex color or choose a preset.",
+        onConfirm = function(value)
+            if value:sub(1, 1) ~= "#" then
+                value = "#" .. value
+            end
+            return self:SetValue(id, value)
+        end,
+    })
+end
+
+function XanaxUI:_handleAction(action)
+    if action == "applyBg" then
+        self:_applyBackground()
+    elseif action == "removeBg" then
+        self:SetValue("ui.bgAsset", "")
+        self:_applyBackground()
+    elseif action == "unload" then
+        self:Unload()
+    end
+end
+
+-- Responsive, proportion-based layout -----------------------------------------
+
+function XanaxUI:_layoutWindow()
+    if self._destroyed or not self._window or self._minimized then
+        return
+    end
+    local size = self._window.AbsoluteSize
+    if size.X < 1 or size.Y < 1 then
+        return
+    end
+    local compact = self._compact
+    local unit = compact and math.clamp(size.X / 380, 0.75, 1.45) or size.X / DESIGN.Width
+    self._unit = unit
+    local titleHeight = (compact and 24 or 11) * unit
+    local tabHeight = (compact and 28 or 14) * unit
+    local top = self._minimized and titleHeight or titleHeight + tabHeight + 6 * unit
+    local contentHeight = math.max(1, size.Y - top - 7 * unit)
+    self._title.Size = UDim2.new(1, 0, 0, titleHeight)
+    self._tabBar.Position = UDim2.new(4 / DESIGN.Width, 0, 0, titleHeight + unit)
+    self._tabBar.Size = UDim2.new(1 - 8 / DESIGN.Width, 0, 0, tabHeight)
+    self._tabBar.Visible = not self._minimized
+    if self._scaleSlider then
+        self._scaleSlider.Visible = not self._minimized
+    end
+    local rowMultiplier = compact and 1.7 or 1
+    for _, metric in ipairs(self._rowMetrics) do
+        metric.object.Size = UDim2.new(1, 0, 0, metric.height * unit * rowMultiplier)
+    end
+    for _, metric in ipairs(self._textMetrics) do
+        local factor = compact and (metric.isTab and 1.1 or 1.3) or 1
+        metric.object.TextSize = math.max(6, metric.size * unit * factor)
+    end
+    for _, page in pairs(self._pages) do
+        page.group.Position = UDim2.new(4 / DESIGN.Width, 0, 0, top)
+        page.group.Size = UDim2.new(1 - 8 / DESIGN.Width, 0, 0, contentHeight)
+        local totalHeight = 0
+        for index, column in ipairs(page.columns) do
+            column.padding.PaddingLeft = UDim.new(0, 4 * unit)
+            column.padding.PaddingRight = UDim.new(0, 4 * unit)
+            column.padding.PaddingTop = UDim.new(0, 2 * unit)
+            column.padding.PaddingBottom = UDim.new(0, 5 * unit)
+            if compact then
+                local height = math.max(150 * unit, column.designHeight * unit * rowMultiplier + 7 * unit)
+                column.frame.Position = UDim2.fromOffset(0, totalHeight)
+                column.frame.Size = UDim2.new(1, -4, 0, height)
+                totalHeight += height + DESIGN.Gap * unit
+            else
+                column.frame.Position = UDim2.fromScale((index - 1) * (0.5 + DESIGN.Gap / DESIGN.ContentWidth / 2), 0)
+                column.frame.Size = UDim2.new(0.5 - DESIGN.Gap / DESIGN.ContentWidth / 2, 0, 0, contentHeight)
+            end
+        end
+        page.scroll.ScrollingEnabled = true
+        local needsScroll = totalHeight * unit > contentHeight
+        page.scroll.ScrollBarThickness = needsScroll and 3 or 0
+        page.scroll.CanvasSize = UDim2.new(1, 0, 0, math.max(0, totalHeight * unit * (compact and rowMultiplier or 1)))
+        if not compact then
+            page.scroll.CanvasPosition = Vector2.zero
+        end
+    end
+end
+
+function XanaxUI:_resizeRoot()
+    if self._destroyed or not self._viewport then
+        return
+    end
+    local available = self._viewport.AbsoluteSize
+    if available.X < 1 or available.Y < 1 then
+        return
+    end
+    self:_closeModal()
+    self._compact = available.X < 600 and available.Y > available.X
+    local scale = self._state["ui.scale"] / 100
+    if self._compact then
+        self._aspect.Parent = nil
+    else
+        self._aspect.Parent = self._window
+    end
+    self._window.Size = UDim2.fromScale(0.985 * scale, self._compact and 0.985 or 0.985 * scale)
+    self._sizeConstraint.MaxSize = self._compact and Vector2.new(1461, math.huge) or Vector2.new(1461, 948)
+    self:_layoutWindow()
+end
+
+function XanaxUI:_applyPreferences()
+    if not self._window then
+        return
+    end
+    if self._appliedScale ~= self._state["ui.scale"] then
+        self._appliedScale = self._state["ui.scale"]
+        self:_resizeRoot()
+    end
+    self._reopen.Text = CONFIG.Title
+    self._screen:SetAttribute("MenuKey", self._state["ui.menuKey"])
+    if self._visible then
+        self:_tween(self._window, { GroupTransparency = 1 - self._state["ui.opacity"] / 100 }, 0.14)
+    end
+    self:_applyBackground()
+end
+
+function XanaxUI:_applyBackground()
+    if not self._window then
+        return
+    end
+    local id = self._state["ui.bgAsset"]
+    local hasBg = id and #id > 0
+    if hasBg and not self._bgImage then
+        self._bgImage = make("ImageLabel", {
+            Name = "BgImage",
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Image = "",
+            ImageTransparency = 0.7,
+            ScaleType = Enum.ScaleType.Crop,
+            ZIndex = 0,
+        }, nil)
+    end
+    if hasBg then
+        local assetUrl = id
+        if tonumber(id) then
+            assetUrl = "rbxthumb://type=Asset&id=" .. id .. "&w=420&h=420"
+        end
+        self._bgImage.Image = assetUrl
+        self._bgImage.Parent = self._window
+        self._bgImage.ZIndex = 100
+        self._bgImage.ImageTransparency = 0.8
+        if self._reopen then
+            self._reopen.BackgroundTransparency = 1
+            if not self._reopenBg then
+                self._reopenBg = make("ImageLabel", {
+                    Name = "BgImage",
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    ImageTransparency = 0.8,
+                    ScaleType = Enum.ScaleType.Crop,
+                    ZIndex = -1,
+                }, nil)
+            end
+            self._reopenBg.Image = assetUrl
+            self._reopenBg.Parent = self._reopen
+        end
+    else
+        if self._bgImage then
+            self._bgImage.Parent = nil
+        end
+        if self._reopen then
+            self._reopen.BackgroundTransparency = 0
+        end
+        if self._reopenBg then
+            self._reopenBg.Parent = nil
+        end
+    end
+end
+
+function XanaxUI:SelectTab(id: string)
+    if self._destroyed then
+        return false, "This UI has been destroyed"
+    end
+    if not self._pages[id] then
+        return false, "Unknown tab: " .. tostring(id)
+    end
+    self:_closeModal()
+    self._activeDrag = nil
+    local changed = self._activeTab ~= id
+    self._activeTab = id
+    for pageId, page in pairs(self._pages) do
+        page.group.Visible = pageId == id
+        if pageId == id and changed then
+            page.group.GroupTransparency = self:_animationsEnabled() and 0.35 or 0
+            self:_tween(page.group, { GroupTransparency = 0 }, 0.16)
+        end
+        self._tabPaint[pageId]()
+    end
+    return true
+end
+
+function XanaxUI:SetVisible(visible: boolean)
+    if self._destroyed then
+        return false, "This UI has been destroyed"
+    end
+    if type(visible) ~= "boolean" then
+        return false, "Visibility must be a boolean"
+    end
+    self:_closeModal()
+    self._activeDrag = nil
+    self._visible = visible
+    self._visibilityVersion += 1
+    local version = self._visibilityVersion
+    self._reopen.Visible = not visible
+    if visible then
+        self._window.Visible = true
+        self:_tween(self._window, { GroupTransparency = 1 - self._state["ui.opacity"] / 100 }, 0.15)
+    else
+        self:_tween(self._window, { GroupTransparency = 1 }, 0.15)
+        task.delay(self:_animationsEnabled() and 0.15 or 0, function()
+            if not self._destroyed and self._visibilityVersion == version and not self._visible then
+                self._window.Visible = false
+            end
+        end)
+    end
+    return true
+end
+
+-- Input capture: one shared drag session, including touch cancellation ----------
+
+function XanaxUI:_updateDrag(position)
+    local drag = self._activeDrag
+    if not drag or not drag.target.Parent or drag.target.AbsoluteSize.X <= 0 then
+        return
+    end
+    -- Input positions include the core UI inset; this ScreenGui uses the safe UI area.
+    local inset = GuiService:GetGuiInset()
+    local x = position.X - inset.X
+    local ratio = math.clamp((x - drag.target.AbsolutePosition.X) / drag.target.AbsoluteSize.X, 0, 1)
+    local definition = drag.definition
+    self:SetValue(definition.id, definition.min + ratio * (definition.max - definition.min))
+end
+
+function XanaxUI:_bindInput()
+    self:_connect(GuiService:GetPropertyChangedSignal("ReducedMotionEnabled"), function() self:_applyPreferences() end)
+    self:_connect(UserInputService.InputChanged, function(input)
+        local drag = self._activeDrag
+        if not drag then
+            return
+        end
+        local isMouse = drag.input.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseMovement
+        if isMouse or input == drag.input then
+            self:_updateDrag(input.Position)
+        end
+    end)
+    self:_connect(UserInputService.InputEnded, function(input)
+        local drag = self._activeDrag
+        if drag and (input == drag.input or (drag.input.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseButton1)) then
+            self._activeDrag = nil
+        end
+    end)
+    self:_connect(UserInputService.WindowFocusReleased, function() self._activeDrag = nil end)
+    self:_connect(UserInputService.InputBegan, function(input, processed)
+        if (input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.ButtonB) and self._modal then
+            self:_closeModal()
+            return
+        end
+        if UserInputService:GetFocusedTextBox() then
+            return
+        end
+        if not processed and input.KeyCode == resolveKeyCode(self._state["ui.menuKey"]) then
+            self:SetVisible(not self._visible)
+            return
+        end
+        if not self._visible or self._modal then
+            return
+        end
+        local step = self._hoveredSlider and self._sliderButtons[self._hoveredSlider]
+        if step then
+            if input.KeyCode == Enum.KeyCode.Left or input.KeyCode == Enum.KeyCode.DPadLeft then
+                step(-1)
+            elseif input.KeyCode == Enum.KeyCode.Right or input.KeyCode == Enum.KeyCode.DPadRight then
+                step(1)
+            end
+        end
+    end)
+    local function rgbCycle()
+        if self._destroyed then return end
+        local t = tick()
+        local texts = {}
+        for _, metric in ipairs(self._textMetrics) do
+            if metric.object.Parent then
+                table.insert(texts, metric.object)
+            end
+        end
+        for _, metric in ipairs(self._rowMetrics) do
+            for _, child in ipairs(metric.object:GetDescendants()) do
+                if child:IsA("TextLabel") or child:IsA("TextButton") then
+                    table.insert(texts, child)
+                end
+            end
+        end
+        if self._title and self._title.Parent then
+            table.insert(texts, self._title)
+        end
+        if self._reopen and self._reopen.Parent then
+            table.insert(texts, self._reopen)
+        end
+        for _, obj in ipairs(texts) do
+            local x = obj.AbsolutePosition.X
+            local wave = math.sin(t * 2.5 + x * 0.012)
+            local v = math.clamp(wave * 0.5 + 0.5, 0, 1)
+            local c = 80 + v * 175
+            obj.TextColor3 = Color3.fromRGB(c, c, c)
+        end
+    end
+    self._rgbConn = RunService.RenderStepped:Connect(rgbCycle)
+end
+
+-- Hierarchy construction -------------------------------------------------------
+
+function XanaxUI:_build(parent)
+    local existing = parent:FindFirstChild("XanaxUI")
+    if existing then
+        existing:Destroy()
+    end
+    self._screen = make("ScreenGui", {
+        Name = "XanaxUI",
+        ResetOnSpawn = false,
+        DisplayOrder = 20,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+        ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
+        ClipToDeviceSafeArea = true,
+    }, parent)
+    self.Instance = self._screen
+    self._changed = make("BindableEvent", { Name = "Changed" }, self._screen)
+    self.Changed = self._changed.Event
+    self._viewport = make("Frame", {
+        Name = "Viewport", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0,
+    }, self._screen)
+    self._window = make("CanvasGroup", {
+        Name = "Window",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.fromScale(0.5, 0.5),
+        Size = UDim2.fromScale(0.985, 0.985),
+        BackgroundColor3 = self._theme.Window,
+        BorderSizePixel = 1,
+        BorderColor3 = self._theme.Edge,
+        GroupTransparency = self:_animationsEnabled() and 0.35 or 0,
+        Active = true,
+    }, self._viewport)
+    self._aspect = make("UIAspectRatioConstraint", {
+        AspectRatio = DESIGN.Width / DESIGN.Height,
+        AspectType = Enum.AspectType.FitWithinMaxSize,
+    }, self._window)
+    self._sizeConstraint = make("UISizeConstraint", { MaxSize = Vector2.new(1461, 948) }, self._window)
+    self._title = self:_text("TextButton", self._window, "Title", CONFIG.Title, 9, {
+        Size = UDim2.fromScale(1, 11 / DESIGN.Height),
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextColor3 = Color3.fromRGB(224, 223, 225),
+        BackgroundTransparency = 1,
+    })
+    do
+        local dragging, dragStart, startPos
+        local mouse = Players.LocalPlayer:GetMouse()
+        self:_connect(self._window.InputBegan, function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                local hit = mouse.Target
+                local isInteractive = hit and hit:IsA("GuiButton") and hit:IsDescendantOf(self._window)
+                if not isInteractive then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = self._window.Position
+                end
+                if input.UserInputType == Enum.UserInputType.Touch then
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                        end
+                    end)
+                end
+            end
+        end)
+        self:_connect(UserInputService.InputChanged, function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                local viewport = self._viewport.AbsoluteSize
+                local newX = (startPos.X.Scale * viewport.X + delta.X) / viewport.X
+                local newY = (startPos.Y.Scale * viewport.Y + delta.Y) / viewport.Y
+                self._window.Position = UDim2.fromScale(newX, newY)
+            end
+        end)
+        self:_connect(UserInputService.InputEnded, function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+    end
+    self._tabBar = make("Frame", {
+        Name = "Tabs", BackgroundTransparency = 1, BorderSizePixel = 0,
+        Position = UDim2.fromScale(4 / DESIGN.Width, 12 / DESIGN.Height),
+        Size = UDim2.fromScale(DESIGN.ContentWidth / DESIGN.Width, 14 / DESIGN.Height),
+    }, self._window)
+    make("UIListLayout", {
+        FillDirection = Enum.FillDirection.Horizontal,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(3 / DESIGN.ContentWidth, 0),
+    }, self._tabBar)
+    local tabCount = #CONFIG.Tabs
+    for tabIndex, tab in ipairs(CONFIG.Tabs) do
+        local tabButton = self:_text("TextButton", self._tabBar, "Tab_" .. tab.id, tab.label, 8.6, {
+            LayoutOrder = tabIndex,
+            Size = UDim2.fromScale((DESIGN.ContentWidth - 3 * (tabCount - 1)) / tabCount / DESIGN.ContentWidth, 1),
+            BackgroundTransparency = 0,
+            BackgroundColor3 = Color3.fromRGB(32, 32, 32),
+            BorderSizePixel = 1,
+            BorderColor3 = self._theme.Border,
+            TextXAlignment = Enum.TextXAlignment.Center,
+        })
+        local paint = self:_bindButton(tabButton, function() self:SelectTab(tab.id) end, function()
+            local selected = self._activeTab == tab.id
+            return selected and Color3.fromRGB(41, 41, 41) or Color3.fromRGB(32, 32, 32), 0, selected and Color3.fromRGB(224, 224, 226) or self._theme.Text
+        end)
+        self._tabPaint[tab.id] = function()
+            tabButton.BorderColor3 = self._activeTab == tab.id and Color3.fromRGB(115, 119, 121) or Color3.fromRGB(62, 65, 65)
+            tabButton:SetAttribute("Selected", self._activeTab == tab.id)
+            paint()
+        end
+        local group = make("CanvasGroup", {
+            Name = "Page_" .. tab.id,
+            Position = UDim2.fromScale(4 / DESIGN.Width, 31 / DESIGN.Height),
+            Size = UDim2.fromScale(DESIGN.ContentWidth / DESIGN.Width, 273 / DESIGN.Height),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Visible = false,
+        }, self._window)
+        local scroll = make("ScrollingFrame", {
+            Name = "Columns",
+            Size = UDim2.fromScale(1, 1),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            CanvasSize = UDim2.fromScale(1, 1),
+            ScrollingDirection = Enum.ScrollingDirection.Y,
+            ScrollBarThickness = 0,
+            ScrollBarImageColor3 = self._theme.Accent,
+            ScrollingEnabled = false,
+            ElasticBehavior = Enum.ElasticBehavior.Never,
+        }, group)
+        local page = { group = group, scroll = scroll, columns = {} }
+        self._pages[tab.id] = page
+        for columnIndex, definitions in ipairs(tab.columns) do
+            local pane = make("Frame", {
+                Name = columnIndex == 1 and "Primary" or "Secondary",
+                Position = UDim2.fromScale((columnIndex - 1) * 0.5085, 0),
+                Size = UDim2.fromScale(0.4915, 1),
+                BackgroundColor3 = self._theme.Panel,
+                BorderSizePixel = 1,
+                BorderColor3 = self._theme.Border,
+            }, scroll)
+            local padding = make("UIPadding", {
+                PaddingLeft = UDim.new(0, 4), PaddingRight = UDim.new(0, 4), PaddingTop = UDim.new(0, 2), PaddingBottom = UDim.new(0, 5),
+            }, pane)
+            make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 0) }, pane)
+            local totalHeight = 0
+            for order, definition in ipairs(definitions) do
+                self:_buildControl(pane, definition, order)
+                totalHeight += HEIGHTS[definition.type]
+            end
+            table.insert(page.columns, { frame = pane, padding = padding, designHeight = totalHeight })
+        end
+    end
+    local titleBtnSize = UDim2.new(0, 18, 0, 11)
+    self._minBtn = make("TextButton", {
+        Name = "Minimize",
+        Text = "-",
+        Font = Enum.Font.Code,
+        TextSize = 10,
+        TextColor3 = self._theme.Muted,
+        BackgroundColor3 = self._theme.Hover,
+        BorderSizePixel = 0,
+        Position = UDim2.new(1, -42, 0, 1),
+        Size = titleBtnSize,
+        AutoButtonColor = false,
+        ZIndex = 4,
+    }, self._window)
+    self:_bindButton(self._minBtn, function()
+        if self._minimized then
+            for pid, page in pairs(self._pages) do
+                page.group.Visible = pid == self._activeTab
+            end
+            self._tabBar.Visible = true
+            self._scaleSlider.Visible = true
+            self._minimized = false
+            self._minBtn.Text = "-"
+            self._aspect.Parent = self._window
+            self._sizeConstraint.MaxSize = self._compact and Vector2.new(1461, math.huge) or Vector2.new(1461, 948)
+            self:_resizeRoot()
+        else
+            self._minimized = true
+            self._minBtn.Text = "+"
+            self._aspect.Parent = nil
+            self._tabBar.Visible = false
+            self._scaleSlider.Visible = false
+            for _, page in pairs(self._pages) do
+                page.group.Visible = false
+            end
+            local w = self._window.AbsoluteSize.X
+            self._sizeConstraint.MaxSize = Vector2.new(w, 948)
+            self._window.Size = UDim2.new(0, w, 0, 22)
+        end
+    end, function()
+        return self._theme.Hover, 0, self._theme.Muted
+    end)
+    self._exitBtn = make("TextButton", {
+        Name = "Exit",
+        Text = "x",
+        Font = Enum.Font.Code,
+        TextSize = 10,
+        TextColor3 = self._theme.Muted,
+        BackgroundColor3 = self._theme.Hover,
+        BorderSizePixel = 0,
+        Position = UDim2.new(1, -22, 0, 1),
+        Size = titleBtnSize,
+        AutoButtonColor = false,
+        ZIndex = 4,
+    }, self._window)
+    self:_bindButton(self._exitBtn, function()
+        self:SetVisible(false)
+    end, function()
+        return self._theme.Hover, 0, self._theme.Muted
+    end)
+    self._scaleSlider = make("TextButton", {
+        Name = "ScaleHandle",
+        Text = "",
+        AnchorPoint = Vector2.new(1, 1),
+        Position = UDim2.new(1, 0, 1, 0),
+        Size = UDim2.new(0, 14, 0, 14),
+        BackgroundColor3 = self._theme.Accent,
+        BackgroundTransparency = 0.3,
+        BorderSizePixel = 0,
+        ZIndex = 6,
+        AutoButtonColor = false,
+    }, self._window)
+    local tri = make("ImageLabel", {
+        Name = "Tri",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://7072706796",
+        ImageColor3 = Color3.new(1, 1, 1),
+        Rotation = 180,
+        ZIndex = 7,
+    }, self._scaleSlider)
+    local draggingScale = false
+    local startY, startScale
+    self._views["ui.scale"] = function() end
+    self:_connect(self._scaleSlider.InputBegan, function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingScale = true
+            startY = input.Position.Y
+            startScale = self._state["ui.scale"]
+        end
+    end)
+    self:_connect(UserInputService.InputChanged, function(input)
+        if draggingScale and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = (input.Position.Y - startY) / 150
+            local value = 70 + math.clamp(math.floor((startScale - 70 + delta * 30) / 5 + 0.5) * 5, 0, 30)
+            self:SetValue("ui.scale", value)
+        end
+    end)
+    self:_connect(UserInputService.InputEnded, function(input)
+        if draggingScale and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            draggingScale = false
+        end
+    end)
+    self._reopen = make("TextButton", {
+        Name = "RestoreMenu",
+        Text = CONFIG.Title,
+        Font = Enum.Font.Code,
+        TextSize = 14,
+        TextScaled = true,
+        TextColor3 = self._theme.Accent,
+        BackgroundColor3 = self._theme.Panel,
+        BorderSizePixel = 0,
+        AnchorPoint = Vector2.new(0.5, 0),
+        Position = UDim2.fromScale(0.5, 0.01),
+        Size = UDim2.fromScale(0.16, 0.04),
+        Visible = false,
+        AutoButtonColor = false,
+        AutoLocalize = false,
+        ZIndex = 5,
+    }, self._viewport)
+    make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, self._reopen)
+    make("UISizeConstraint", { MinSize = Vector2.new(90, 26), MaxSize = Vector2.new(180, 36) }, self._reopen)
+    make("UITextSizeConstraint", { MinTextSize = 10, MaxTextSize = 16 }, self._reopen)
+    self:_bindButton(self._reopen, function() self:SetVisible(true) end, function()
+        return self._theme.Panel, 0, self._theme.Accent
+    end)
+    self:_connect(self._window:GetPropertyChangedSignal("AbsoluteSize"), function() self:_layoutWindow() end)
+    self:_connect(self._viewport:GetPropertyChangedSignal("AbsoluteSize"), function() self:_resizeRoot() end)
+    self:_connect(self._screen.Destroying, function() self:Destroy() end)
+end
+
+-- Public constructor and deterministic cleanup --------------------------------
+
+function XanaxUI.mount(options: MountOptions?)
+    options = options or {}
+    assert(type(options) == "table", "mount options must be a table")
+    assert(options.OnChanged == nil or type(options.OnChanged) == "function", "OnChanged must be a function")
+    local player = Players.LocalPlayer
+    assert(player, "XanaxUI must be mounted by a LocalScript on the client")
+    local parent = options.Parent or player:WaitForChild("PlayerGui", 10)
+    assert(typeof(parent) == "Instance" and parent:IsA("PlayerGui"), "A valid PlayerGui is required")
+    local self = setmetatable({
+        _connections = {}, _tweens = {}, _definitions = {}, _defaults = {}, _state = {},
+        _views = {}, _theme = {}, _tabDefinitions = {}, _pages = {}, _tabPaint = {},
+        _textMetrics = {}, _rowMetrics = {}, _sliderButtons = {}, _bgImage = nil, _reopenBg = nil, _hoveredSlider = nil,
+        _destroyed = false, _visible = true, _visibilityVersion = 0,
+        _activeTab = "player", _compact = false, _unit = 1, _minimized = false,
+    }, XanaxUI)
+    local ok, message = xpcall(function()
+        self:_prepare(options.InitialState or INITIAL_STATE)
+        self:_build(parent)
+        self:_bindInput()
+        if options.OnChanged then
+            self:_connect(self.Changed, function(id, value)
+                local called, callbackError = pcall(options.OnChanged, id, value)
+                if not called then
+                    warn("[xanax] OnChanged callback failed: " .. tostring(callbackError))
+                end
+            end)
+        end
+        self:SelectTab("player")
+        self:_applyPreferences()
+        self:_applyBackground()
+        task.defer(function()
+            if not self._destroyed then
+                self:_resizeRoot()
+            end
+        end)
+    end, debug.traceback)
+    if not ok then
+        self:Destroy()
+        error("[xanax] Mount failed: " .. tostring(message), 2)
+    end
+    return self
+end
+
+function XanaxUI:Unload()
+    self:Destroy()
+end
+
+function XanaxUI:Destroy()
+    if self._destroyed then
+        return
+    end
+    self._destroyed = true
+    self._visibilityVersion += 1
+    self._activeDrag = nil
+    self:_closeModal()
+    if self._rgbConn then
+        self._rgbConn:Disconnect()
+        self._rgbConn = nil
+    end
+    for _, connection in ipairs(self._connections) do
+        connection:Disconnect()
+    end
+    table.clear(self._connections)
+    for _, tween in pairs(self._tweens) do
+        tween:Cancel()
+    end
+    table.clear(self._tweens)
+    if self._aspect then
+        self._aspect:Destroy()
+    end
+    if self._bgImage then
+        self._bgImage:Destroy()
+        self._bgImage = nil
+    end
+    if self._reopenBg then
+        self._reopenBg:Destroy()
+        self._reopenBg = nil
+    end
+    if self._screen then
+        self._screen:Destroy()
+    end
+    table.clear(self._views)
+    table.clear(self._textMetrics)
+    table.clear(self._rowMetrics)
+    table.clear(self._sliderButtons)
+    self._hoveredSlider = nil
+    table.clear(self._pages)
+    table.clear(self._tabPaint)
+    self.Instance = nil
+end
+
+-- Keep this controller to connect Changed or call SetValue in your experience.
+local controller = XanaxUI.mount({ InitialState = INITIAL_STATE })
+
+pcall(function()
+    if script and script.Destroying then
+        script.Destroying:Connect(function()
+            controller:Destroy()
+        end)
+    end
+end)
