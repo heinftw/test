@@ -1,1 +1,590 @@
+--// xanax.ui SaveManager | v2.0.0
+--// Config persistence for any UI built with the xanax.ui library.
+--// Seven controls: name textbox, config dropdown, Save, Load, Overwrite,
+--// Set as Auto-Load, Delete. Falls back to a getgenv() store when the
+--// executor lacks filesystem functions. Ends with `return SaveManager`.
 
+local HttpService = game:GetService("HttpService")
+
+local SaveManager = {
+	Folder = "Configs",
+	Library = nil,
+	Version = 2,
+	-- storage layout: <Folder>/configs/<name>.json and <Folder>/autoload.json
+	ConfigsSubfolder = "configs",
+	AutoloadFile = "autoload.json",
+}
+
+SaveManager.__index = SaveManager
+
+local function sanitizeName(input)
+	local raw = tostring(input or "")
+	local clean = raw:gsub("^%s+", ""):gsub("%s+$", "")
+	clean = clean:gsub("[%c\\/:*?\"<>|]", "")
+	clean = clean:gsub("%s+", " ")
+	clean = clean:gsub("[%.%s]+$", "")
+	return clean, clean ~= raw
+end
+
+local function sortedKeys(list)
+	local keys = {}
+	for key in pairs(list) do
+		table.insert(keys, key)
+	end
+	table.sort(keys)
+	return keys
+end
+
+-- Filesystem feature detection ---------------------------------------------------
+
+local FS = nil
+
+local function detectFilesystem()
+	if FS ~= nil then
+		return FS
+	end
+	local required = { "writefile", "readfile", "isfile", "isfolder", "listfiles", "delfile", "makefolder" }
+	local missing = {}
+	for _, name in ipairs(required) do
+		local value = rawget(_G, name) or _G[name]
+		if type(value) ~= "function" then
+			table.insert(missing, name)
+		end
+	end
+	if #missing > 0 then
+		FS = false
+		return false, missing
+	end
+	FS = true
+	return true
+end
+
+local function callFileApi(name, ...)
+	local fn = rawget(_G, name) or _G[name]
+	if type(fn) ~= "function" then
+		return false, "unavailable"
+	end
+	return fn(...)
+end
+
+-- getgenv() in-memory fallback ----------------------------------------------------
+
+local function memoryStore()
+	local ok, store = pcall(function()
+		return getgenv()
+	end)
+	if not ok or type(store) ~= "table" then
+		store = _G
+	end
+	local key = "__XANAX_UI_SAVE_MANAGER_STORE"
+	local bucket = store[key]
+	if type(bucket) ~= "table" then
+		bucket = { configs = {}, autoload = nil }
+		store[key] = bucket
+	end
+	return bucket
+end
+
+function SaveManager:BaseFolder()
+	local base = sanitizeName(self.Folder)
+	if #base == 0 then
+		base = "Configs"
+	end
+	return base
+end
+
+function SaveManager:ConfigsFolder()
+	return self:BaseFolder() .. "/" .. (self.ConfigsSubfolder or "configs")
+end
+
+local function ensureFolders(self)
+	local okMake, errMake = callFileApi("makefolder", self:BaseFolder())
+	if not okMake and errMake and not callFileApi("isfolder", self:BaseFolder()) then
+		return false
+	end
+	callFileApi("makefolder", self:ConfigsFolder())
+	return callFileApi("isfolder", self:ConfigsFolder())
+end
+
+-- Status feedback ------------------------------------------------------------------
+
+local function setStatus(self, text, kind)
+	local theme = (self.Library and self.Library.Theme) or nil
+	if self._statusLabel then
+		local color = (theme and theme.Muted) or Color3.fromRGB(112, 112, 112)
+		if kind == "error" then
+			color = Color3.fromRGB(231, 157, 143)
+		elseif kind == "success" then
+			color = Color3.fromRGB(156, 223, 135)
+		elseif kind == "accent" then
+			color = (theme and theme.Accent) or color
+		end
+		self._statusLabel:SetText(text, color)
+	end
+	if self.Library and self.Library.Notify then
+		if kind == "error" then
+			self.Library.Notify({ Title = "Save Manager", Text = text, Duration = 3, Type = "Error" })
+		elseif kind == "success" then
+			self.Library.Notify({ Title = "Save Manager", Text = text, Duration = 3, Type = "Success" })
+		end
+	end
+end
+
+local function setAutoloadLabel(self)
+	if self._autoloadLabel then
+		local current = self:GetAutoload()
+		local theme = (self.Library and self.Library.Theme) or nil
+		if current and #current > 0 then
+			self._autoloadLabel:SetText("Autoload: " .. current, (theme and theme.Accent) or nil)
+		else
+			self._autoloadLabel:SetText("Autoload: none")
+		end
+	end
+end
+
+-- Config registry -------------------------------------------------------------------
+
+function SaveManager:GetConfigs()
+	local configs = {}
+	if detectFilesystem() then
+		local ok, entries = pcall(function()
+			return callFileApi("listfiles", self:ConfigsFolder())
+		end)
+		if ok and type(entries) == "table" then
+			for _, entry in ipairs(entries) do
+				local name = tostring(entry)
+				name = name:gsub("\\", "/")
+				name = name:match("([^/]+)$") or name
+				name = name:match("^(.*)%.[jJ][sS][oO][nN]$") or name
+				if #name > 0 and name:lower() ~= self.AutoloadFile:lower() then
+					configs[name] = true
+				end
+			end
+		end
+	else
+		for name in pairs(memoryStore().configs) do
+			configs[name] = true
+		end
+	end
+	local list = {}
+	for name in pairs(configs) do
+		table.insert(list, name)
+	end
+	table.sort(list)
+	return list
+end
+
+function SaveManager:ResolveName(name)
+	-- collapses case-only differences to the canonical stored name
+	local clean = sanitizeName(name)
+	for _, existing in ipairs(self:GetConfigs()) do
+		if existing:lower() == clean:lower() then
+			return existing
+		end
+	end
+	return clean
+end
+
+function SaveManager:ConfigPath(name)
+	return self:ConfigsFolder() .. "/" .. name .. ".json"
+end
+
+function SaveManager:AutoloadPath()
+	return self:BaseFolder() .. "/" .. self.AutoloadFile
+end
+
+function SaveManager:_writeConfig(name, flags)
+	local payload = {
+		version = self.Version,
+		flags = flags,
+	}
+	local okEncode, encoded = pcall(function()
+		return HttpService:JSONEncode(payload)
+	end)
+	if not okEncode then
+		return false, "JSON encode failed: " .. tostring(encoded)
+	end
+	if detectFilesystem() then
+		if not ensureFolders(self) then
+			return false, "Could not create " .. self:ConfigsFolder()
+		end
+		local okWrite, errWrite = callFileApi("writefile", self:ConfigPath(name), encoded)
+		if not okWrite then
+			local okRetry
+			okRetry, errWrite = pcall(function()
+				writefile(self:ConfigPath(name), encoded)
+			end)
+			if not okRetry then
+				return false, "writefile failed: " .. tostring(errWrite)
+			end
+		end
+	else
+		memoryStore().configs[name] = encoded
+	end
+	return true
+end
+
+function SaveManager:_readConfig(name)
+	local raw = nil
+	if detectFilesystem() then
+		local okRead, content = pcall(function()
+			return callFileApi("readfile", self:ConfigPath(name))
+		end)
+		if not okRead then
+			return nil, "readfile failed: " .. tostring(content)
+		end
+		raw = content
+	else
+		raw = memoryStore().configs[name]
+		if raw == nil then
+			return nil, "Config not found: " .. name
+		end
+	end
+	local okDecode, decoded = pcall(function()
+		return HttpService:JSONDecode(raw)
+	end)
+	if not okDecode or type(decoded) ~= "table" or type(decoded.flags) ~= "table" then
+		return nil, "Corrupt config file"
+	end
+	return decoded
+end
+
+-- Serialization ----------------------------------------------------------------------
+
+function SaveManager:SerializeFlags()
+	local flags = {}
+	local library = self.Library
+	if not library then
+		return flags
+	end
+	for flag, element in pairs(library._FlagElements) do
+		if element and not element.Destroyed and not element._autoFlag then
+			flags[flag] = library:SerializeValue(element.Value)
+		end
+	end
+	return flags
+end
+
+function SaveManager:_applyFlags(flags)
+	local library = self.Library
+	if not library then
+		return 0, 0, 0
+	end
+	local applied, failed, skipped = 0, 0, 0
+	local names = {}
+	for flag in pairs(flags) do
+		table.insert(names, flag)
+	end
+	table.sort(names)
+	for _, flag in ipairs(names) do
+		local element = library._FlagElements[flag]
+		if element and not element.Destroyed then
+			local okSet, setResult = pcall(function()
+				return element:Set(library:DeserializeValue(flags[flag]))
+			end)
+			if okSet and setResult == true then
+				applied = applied + 1
+			else
+				failed = failed + 1
+			end
+		else
+			skipped = skipped + 1
+		end
+	end
+	return applied, failed, skipped
+end
+
+-- Public storage API -------------------------------------------------------------------
+
+function SaveManager:SetLibrary(library)
+	self.Library = library
+	return true
+end
+
+function SaveManager:SetFolder(name)
+	self.Folder = sanitizeName(name)
+	if #self.Folder == 0 then
+		self.Folder = "Configs"
+	end
+	return true
+end
+
+function SaveManager:Save(name)
+	local clean = sanitizeName(name)
+	if #clean == 0 then
+		if self._nameBox then
+			self._nameBox:Alert()
+		end
+		setStatus(self, "Enter a config name first", "error")
+		return false, "Empty config name"
+	end
+	local canonical = self:ResolveName(clean)
+	local existed = canonical:lower() == clean:lower()
+	local ok, err = self:_writeConfig(canonical, self:SerializeFlags())
+	if not ok then
+		setStatus(self, "Save failed: " .. tostring(err), "error")
+		return false, err
+	end
+	self:RefreshConfigList()
+	if self._configDropdown then
+		self._configDropdown:Set(canonical)
+	end
+	if existed then
+		setStatus(self, "Saved '" .. clean .. "' (existing config overwritten)", "success")
+	else
+		setStatus(self, "Saved '" .. clean .. "'", "success")
+	end
+	return true
+end
+
+function SaveManager:Load(name)
+	local clean = sanitizeName(name)
+	if #clean == 0 then
+		setStatus(self, "Select a config to load", "error")
+		return false, "No config selected"
+	end
+	clean = self:ResolveName(clean)
+	local config, err = self:_readConfig(clean)
+	if not config then
+		setStatus(self, "Load failed: " .. tostring(err), "error")
+		return false, err
+	end
+	local applied, failed, skipped = self:_applyFlags(config.flags)
+	local summary = "Loaded '" .. clean .. "' (" .. applied .. " applied"
+	if failed > 0 then
+		summary = summary .. ", " .. failed .. " failed"
+	end
+	if skipped > 0 then
+		summary = summary .. ", " .. skipped .. " skipped"
+	end
+	setStatus(self, summary .. ")", "success")
+	return true, applied
+end
+
+function SaveManager:Overwrite(name)
+	local clean = sanitizeName(name)
+	if #clean == 0 then
+		setStatus(self, "Select a config to overwrite", "error")
+		return false, "No config selected"
+	end
+	local canonical = self:ResolveName(clean)
+	local exists = canonical:lower() == clean:lower()
+	if not exists then
+		setStatus(self, "'" .. clean .. "' does not exist yet — use Save", "error")
+		return false, "Config not found"
+	end
+	local ok, err = self:_writeConfig(canonical, self:SerializeFlags())
+	if not ok then
+		setStatus(self, "Overwrite failed: " .. tostring(err), "error")
+		return false, err
+	end
+	self:RefreshConfigList()
+	if self._configDropdown then
+		self._configDropdown:Set(canonical)
+	end
+	setStatus(self, "Overwrote '" .. canonical .. "'", "success")
+	return true
+end
+
+function SaveManager:Delete(name)
+	local clean = sanitizeName(name)
+	if #clean == 0 then
+		setStatus(self, "Select a config to delete", "error")
+		return false, "No config selected"
+	end
+	clean = self:ResolveName(clean)
+	local removed = false
+	if detectFilesystem() then
+		local ok = pcall(function()
+			callFileApi("delfile", self:ConfigPath(clean))
+		end)
+		removed = ok and callFileApi("isfile", self:ConfigPath(clean)) ~= true
+	else
+		removed = memoryStore().configs[clean] ~= nil
+		memoryStore().configs[clean] = nil
+	end
+	if not removed then
+		setStatus(self, "'" .. clean .. "' could not be deleted", "error")
+		return false, "Delete failed"
+	end
+	self:RefreshConfigList()
+	if self._configDropdown then
+		self._configDropdown:Set(nil)
+	end
+	local autoload = self:GetAutoload()
+	if autoload and autoload:lower() == clean:lower() then
+		self:ClearAutoload()
+	end
+	setStatus(self, "Deleted '" .. clean .. "'", "success")
+	return true
+end
+
+function SaveManager:GetAutoload()
+	local raw = nil
+	if detectFilesystem() then
+		local ok, content = pcall(function()
+			return callFileApi("readfile", self:AutoloadPath())
+		end)
+		if not ok then
+			return nil
+		end
+		raw = content
+	else
+		raw = memoryStore().autoload
+	end
+	if type(raw) ~= "string" or #raw == 0 then
+		return nil
+	end
+	local okDecode, decoded = pcall(function()
+		return HttpService:JSONDecode(raw)
+	end)
+	if not okDecode or type(decoded) ~= "table" then
+		return nil
+	end
+	return decoded.config
+end
+
+function SaveManager:SetAutoload(name)
+	local clean = sanitizeName(name)
+	if #clean == 0 then
+		return false, "No config selected"
+	end
+	clean = self:ResolveName(clean)
+	local encoded = HttpService:JSONEncode({ config = clean })
+	if detectFilesystem() then
+		if not ensureFolders(self) then
+			return false, "Could not create " .. self:BaseFolder()
+		end
+		local ok = pcall(function()
+			callFileApi("writefile", self:AutoloadPath(), encoded)
+		end)
+		if not ok then
+			return false, "writefile failed"
+		end
+	else
+		memoryStore().autoload = encoded
+	end
+	setAutoloadLabel(self)
+	setStatus(self, "Auto-load set to '" .. clean .. "'", "accent")
+	return true
+end
+
+function SaveManager:ClearAutoload()
+	if detectFilesystem() then
+		pcall(function()
+			callFileApi("delfile", self:AutoloadPath())
+		end)
+	else
+		memoryStore().autoload = nil
+	end
+	setAutoloadLabel(self)
+end
+
+function SaveManager:LoadAutoloadConfig()
+	local name = self:GetAutoload()
+	if type(name) ~= "string" or #name == 0 then
+		return false
+	end
+	local exists = false
+	for _, existing in ipairs(self:GetConfigs()) do
+		if existing:lower() == name:lower() then
+			exists = true
+			break
+		end
+	end
+	if not exists then
+		-- the config was deleted; clear the marker silently
+		self:ClearAutoload()
+		return false
+	end
+	return self:Load(name)
+end
+
+function SaveManager:RefreshConfigList()
+	if self._configDropdown then
+		self._configDropdown:SetOptions(self:GetConfigs())
+	end
+	return true
+end
+
+-- UI ----------------------------------------------------------------------------------
+
+function SaveManager:BuildConfigSection(tab)
+	local library = self.Library
+	if not library then
+		warn("[SaveManager] Call SaveManager:SetLibrary(lib) before BuildConfigSection")
+		return nil
+	end
+	if not tab then
+		local window = library.GetWindow and library:GetWindow()
+		if not window then
+			warn("[SaveManager] BuildConfigSection needs a tab or at least one created window")
+			return nil
+		end
+		tab = window:CreateTab("Settings")
+	end
+	local filesystem, missing = detectFilesystem()
+
+	tab:AddSection({ Text = "Configuration" })
+	self._nameBox = tab:AddTextbox({
+		Text = "Config Name:",
+		Placeholder = "my config",
+		Default = "",
+	})
+	self._configDropdown = tab:AddDropdown({
+		Text = "Config:",
+		Options = self:GetConfigs(),
+		Default = nil,
+	})
+	self._configDropdown:SetOptions(self:GetConfigs())
+
+	tab:AddButton({
+		Text = "Save",
+		Callback = function()
+			self:Save(self._nameBox:Get())
+		end,
+	})
+	tab:AddButton({
+		Text = "Load",
+		Callback = function()
+			self:Load(self._configDropdown:Get())
+		end,
+	})
+	tab:AddButton({
+		Text = "Overwrite",
+		Callback = function()
+			self:Overwrite(self._configDropdown:Get())
+		end,
+	})
+	tab:AddButton({
+		Text = "Set as Auto-Load",
+		Callback = function()
+			self:SetAutoload(self._configDropdown:Get())
+		end,
+	})
+	tab:AddButton({
+		Text = "Delete",
+		Callback = function()
+			self:Delete(self._configDropdown:Get())
+		end,
+	})
+
+	self._statusLabel = tab:AddLabel({ Text = "No config selected" })
+	self._autoloadLabel = tab:AddLabel({ Text = "Autoload: none" })
+
+	if not filesystem then
+		local missingText = "Filesystem functions unavailable"
+		if type(missing) == "table" and #missing > 0 then
+			missingText = missingText .. " (" .. table.concat(missing, ", ") .. ")"
+		end
+		tab:AddParagraph({
+			Title = "Session-only storage",
+			Text = missingText .. ". Configs are kept in memory for this session and are lost when the script unloads.",
+		})
+	end
+
+	setAutoloadLabel(self)
+	return tab
+end
+
+return SaveManager
