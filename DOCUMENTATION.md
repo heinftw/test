@@ -1,4 +1,4 @@
-# xanax.ui — Documentation (Library v2.0.0)
+# xanax.ui — Documentation (Library v2.0.1)
 
 Reusable executor UI library for Roblox. Ground-up rewrite of the original
 one-off `xanax | native Roblox UI | version 1` script. This document matches the
@@ -19,7 +19,7 @@ code in `Library`, `Save Manager` and `example.lua` exactly.
 
 | Member | Description |
 | --- | --- |
-| `Library.Version` | `"2.0.0"` |
+| `Library.Version` | `"2.0.1"` |
 | `Library.Flags` | Table `flag -> current value` across all windows. |
 | `Library.Windows` | Created windows in creation order. |
 | `Library.Theme` | 9 theme keys, each a `Color3`: `Window #111111`, `Panel #161616`, `Border #0a0a0a`, `Edge #1a1a1a`, `Text #c8c8c8`, `Muted #707070`, `Accent #50c7ce`, `Hover #1e1e1e`, `Press #252525`. |
@@ -83,7 +83,7 @@ automatically** — the consumer calls `CreateTab`.
 | `Window:SetVisible(visible)` | Shows/hides. While hidden a reopen pill (0.16×0.04 scale, clamped 90×26–180×36 px) follows the last position; clicking it restores. |
 | `Window:SetMinimized(minimized) -> ok` | Collapses to the header strip and back. |
 | `Window:SetOpacity(percent) -> ok` | Shroud transparency; clamped 20–100. |
-| `Window:SetBackground(assetId) / Window:ClearBackground()` | Full-window background image (Z above panels, 420×420 thumb) with a matching strip on the reopen pill. |
+| `Window:SetBackground(assetId) / Window:ClearBackground()` | Full-window wallpaper (Z above the opacity shroud, below chrome/pages, 420×420 thumb) with a matching strip on the reopen pill. |
 | `Window:SetScale(value) -> ok[, err]` | Clamps 0.50–1.50, drives `UIScale`, writes `ScaleFlag`, reflows rows. |
 | `Window:GetScale() -> number` | Current scale. |
 | `Window:BindScaleElement(element, isPercent?)` | Keeps a slider element (e.g. a `ui.scale` slider, `isPercent` default true) in sync with `SetScale` and vice-versa. |
