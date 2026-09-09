@@ -1,4 +1,4 @@
---// xanax.ui | v2.0.0 | premium executor UI library
+--// xanax.ui | v2.0.1 | premium executor UI library
 --// Ground-up rewrite of "xanax | native Roblox UI | version 1" as a reusable library.
 --// Motion tokens, popup discipline, responsive tiers, executor-safe parenting.
 --// Load with: loadstring(game:HttpGet(<raw url to this file>))()
@@ -12,7 +12,7 @@ local RunService = game:GetService("RunService")
 local TextService = game:GetService("TextService")
 
 local Library = {
-	Version = "2.0.0",
+	Version = "2.0.1",
 	Flags = {},                -- flag name -> current value (all windows)
 	Windows = {},              -- created windows, in order
 	Theme = {},                -- theme key -> Color3 (populated below)
@@ -2619,9 +2619,12 @@ function Tab:_ensurePage()
 	local theme = Library.Theme
 	self._page = new("Frame", {
 		Name = "Page_" .. tostring(self.Title),
+		Size = UDim2.fromScale(1, 1),
+		Position = UDim2.fromScale(0, 0),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		Visible = false,
+		ZIndex = 2,
 	}, window._contentArea)
 	self._scroll = new("ScrollingFrame", {
 		Name = "Scroll",
@@ -2907,13 +2910,15 @@ function Window:_relayout()
 
 	for _, tab in ipairs(self._tabs) do
 		if tab._page then
-			local columnWidth = 0.5
-			if compact or not tab._columns[2].Visible then
-				columnWidth = 1
-			end
+			tab._page.Size = UDim2.fromScale(1, 1)
+			tab._page.Position = UDim2.fromScale(0, 0)
+			local dual = (not compact) and tab._columns[2] and tab._columns[2].Visible
+			local columnWidth = dual and 0.5 or 1
+			local gap = compact and 5 * unit or DESIGN.Gap
 			tab._holderLayout.FillDirection = compact and Enum.FillDirection.Vertical or Enum.FillDirection.Horizontal
-			tab._holderLayout.Padding = UDim.new(0, compact and 5 * unit or DESIGN.Gap)
-			for columnIndex, column in ipairs(tab._columns) do
+			tab._holderLayout.Padding = UDim.new(0, gap)
+			tab._holderLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			for _, column in ipairs(tab._columns) do
 				local padding = column:FindFirstChildOfClass("UIPadding")
 				if padding then
 					local pad = compact and 3 * unit or 4 * unit
@@ -2922,7 +2927,8 @@ function Window:_relayout()
 					padding.PaddingTop = UDim.new(0, compact and 2 * unit or 3 * unit)
 					padding.PaddingBottom = UDim.new(0, compact and 4 * unit or 5 * unit)
 				end
-				column.Size = UDim2.new(columnWidth, compact and 0 or -DESIGN.Gap / 2, 0, 0)
+				-- Dual-column: each pane is 50% minus half the gutter so the pair + padding fits the page.
+				column.Size = UDim2.new(columnWidth, dual and -gap / 2 or 0, 0, 0)
 			end
 		end
 		if tab._tabButton then
@@ -3267,14 +3273,16 @@ function Window:_applyBackground()
 			url = "rbxthumb://type=Asset&id=" .. id .. "&w=420&h=420"
 		end
 		if not self._bgImage then
+			-- Wallpaper sits above the opacity shroud and below chrome/pages so it never eats input or hides rows.
 			self._bgImage = new("ImageLabel", {
 				Name = "BgImage",
-				Size = UDim2.new(1, 0, 1, 0),
+				Size = UDim2.fromScale(1, 1),
 				BackgroundTransparency = 1,
 				ImageTransparency = 0.8,
 				ScaleType = Enum.ScaleType.Crop,
-				ZIndex = 100,
+				ZIndex = 1,
 				BorderSizePixel = 0,
+				Active = false,
 			}, self._window)
 		end
 		self._bgImage.Image = url
@@ -3283,11 +3291,13 @@ function Window:_applyBackground()
 			if not self._reopenBg then
 				self._reopenBg = new("ImageLabel", {
 					Name = "BgImage",
-					Size = UDim2.new(1, 0, 1, 0),
-					BackgroundTransparency = 0.8,
+					Size = UDim2.fromScale(1, 1),
+					BackgroundTransparency = 1,
+					ImageTransparency = 0.8,
 					ScaleType = Enum.ScaleType.Crop,
 					BorderSizePixel = 0,
 					ZIndex = 0,
+					Active = false,
 				}, self._reopen)
 			end
 			self._reopenBg.Image = url
@@ -3622,13 +3632,20 @@ function Window:_build(parent)
 		ResetOnSpawn = false,
 		DisplayOrder = 20,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
-		ClipToDeviceSafeArea = true,
+		IgnoreGuiInset = true,
 	}, parent)
+	-- Best-effort: older clients / executors may not expose these properties.
+	pcall(function()
+		self._screenGui.ClipToDeviceSafeArea = false
+	end)
+	pcall(function()
+		self._screenGui.ScreenInsets = Enum.ScreenInsets.None
+	end)
 	self.Instance = self._screenGui
 	self._viewport = new("Frame", {
 		Name = "Viewport",
 		Size = UDim2.fromScale(1, 1),
+		Position = UDim2.fromScale(0, 0),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 	}, self._screenGui)
@@ -3767,6 +3784,7 @@ function Window:_build(parent)
 		Name = "Content",
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
+		ClipsDescendants = true,
 		ZIndex = 2,
 	}, self._window)
 
