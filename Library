@@ -1,4 +1,4 @@
---// xanax.ui | v2.0.1 | premium executor UI library
+--// xanax.ui | v2.0.2 | premium executor UI library
 --// Ground-up rewrite of "xanax | native Roblox UI | version 1" as a reusable library.
 --// Motion tokens, popup discipline, responsive tiers, executor-safe parenting.
 --// Load with: loadstring(game:HttpGet(<raw url to this file>))()
@@ -12,7 +12,7 @@ local RunService = game:GetService("RunService")
 local TextService = game:GetService("TextService")
 
 local Library = {
-	Version = "2.0.1",
+	Version = "2.0.2",
 	Flags = {},                -- flag name -> current value (all windows)
 	Windows = {},              -- created windows, in order
 	Theme = {},                -- theme key -> Color3 (populated below)
@@ -3020,8 +3020,16 @@ function Window:SelectTab(target)
 				break
 			end
 		end
-	elseif type(target) == "table" and target._page then
-		tab = target
+	elseif type(target) == "table" then
+		-- Resolve by identity against the tab registry: a Tab has no _page
+		-- until its first element is added, so checking target._page here
+		-- silently rejected the first CreateTab (the tab was never selected).
+		for _, entry in ipairs(self._tabs) do
+			if entry == target then
+				tab = entry
+				break
+			end
+		end
 	elseif type(target) == "string" then
 		for _, entry in ipairs(self._tabs) do
 			if entry.Title:lower() == tostring(target):lower() then
@@ -3106,10 +3114,17 @@ function Window:_setupDrag()
 	local function clampToScreen(px, py)
 		local view = viewportSize()
 		local windowSize = self._window.AbsoluteSize
-		local minX = -windowSize.X / 2 + 48
-		local maxX = view.X - windowSize.X / 2 - 48
-		local minY = 24
-		local maxY = view.Y - windowSize.Y / 2 - 24
+		-- Keep-on-screen margins. When the window is (nearly) as large as the
+		-- viewport — the default at 0.985 scale — a fixed 24/48 px margin is
+		-- unreachable, so shrink it to whatever free space exists. This keeps
+		-- the default centered position legal: the window must never snap up
+		-- or sideways the instant a drag starts.
+		local marginX = math.min(48, math.max(0, view.X - windowSize.X) / 2)
+		local marginY = math.min(24, math.max(0, view.Y - windowSize.Y) / 2)
+		local minX = -windowSize.X / 2 + marginX
+		local maxX = view.X - windowSize.X / 2 - marginX
+		local minY = marginY
+		local maxY = view.Y - windowSize.Y / 2 - marginY
 		if minX > maxX then
 			minX, maxX = view.X / 2, view.X / 2
 		end
@@ -3179,7 +3194,10 @@ function Window:_setupDrag()
 				Library:Tween(self._shadow, { ImageTransparency = 0.45, Size = UDim2.new(1, 44, 1, 44) }, Tokens.BASE, "Quint")
 			end
 			local view = viewportSize()
-			local center = self._window.AbsolutePosition + self._window.AbsoluteSize / 2
+			-- The window's AnchorPoint is (0.5, 0.5), so AbsolutePosition already
+			-- IS the window's center. (Adding AbsoluteSize/2 here doubled the
+			-- offset and teleported the window on every release.)
+			local center = self._window.AbsolutePosition
 			local targetX, targetY = clampToScreen(center.X, center.Y)
 			if math.abs(targetX - center.X) > 0.5 or math.abs(targetY - center.Y) > 0.5 then
 				self._window.Position = UDim2.fromScale(targetX / math.max(1, view.X), targetY / math.max(1, view.Y))
@@ -3371,14 +3389,26 @@ function Window:SetMinimized(minimized)
 	local titleHeight = math.max(18 * unit, 16)
 	if minimized then
 		self._aspect.Enabled = false
-		local center = self._window.AbsolutePosition + windowSize / 2
+		self._sizeConstraint.Enabled = false -- let the strip collapse to header height
+		-- Remember the exact size/position so restore can put it back.
+		self._preMinimizeSize = self._window.Size
+		self._preMinimizePosition = self._window.Position
+		-- AnchorPoint is (0.5, 0.5): AbsolutePosition already IS the center, so
+		-- the window's top edge is center.Y - size.Y/2 and the strip keeps it.
+		local center = self._window.AbsolutePosition
 		local topY = center.Y - windowSize.Y / 2 + titleHeight / 2
 		local targetPosition = UDim2.fromScale(self._window.Position.X.Scale, topY / math.max(1, view.Y))
 		self._tabStrip.Visible = false
 		self._contentArea.Visible = false
 		self._scaleHandle.Visible = false
 		Library:Tween(self._minButton, { Text = "+" }, Tokens.INSTANT, "Quad")
-		Library:Tween(self._window, { Size = UDim2.new(self._window.Size.X.Scale, self._window.Size.X.Offset, 0, titleHeight), Position = targetPosition }, Tokens.BASE, "Quint")
+		-- Strip width = the window's current absolute width (normalized by the
+		-- UIScale), so the strip is exactly as wide as the window was.
+		local uiScale = (self._uiScale and self._uiScale.Scale) or 1
+		Library:Tween(self._window, {
+			Size = UDim2.new(0, windowSize.X / uiScale, 0, titleHeight),
+			Position = targetPosition,
+		}, Tokens.BASE, "Quint")
 		for _, entry in ipairs(self._rows) do
 			if entry.Object and entry.Object.Parent then
 				Library:Tween(entry.Object, { GroupTransparency = 1 }, Tokens.INSTANT, "Quad")
@@ -3394,8 +3424,15 @@ function Window:SetMinimized(minimized)
 		self._contentArea.Visible = true
 		self._scaleHandle.Visible = true
 		self._aspect.Enabled = true
+		self._sizeConstraint.Enabled = true
 		Library:Tween(self._minButton, { Text = "-" }, Tokens.INSTANT, "Quad")
-		Library:Tween(self._window, { Size = UDim2.fromScale(0.985, 0.985) }, Tokens.BASE, "Quint")
+		-- Restore the exact pre-minimize size and position: the strip lives at
+		-- the window's top edge, so a size-only restore would leave the window
+		-- off-screen, and hard-coded scale values would clobber SetScale.
+		Library:Tween(self._window, {
+			Size = self._preMinimizeSize or UDim2.fromScale(0.985, 0.985),
+			Position = self._preMinimizePosition or UDim2.fromScale(0.5, 0.5),
+		}, Tokens.BASE, "Quint")
 	end
 	self:_requestRelayout()
 	return true
@@ -3698,7 +3735,7 @@ function Window:_build(parent)
 		BackgroundColor3 = theme.Window,
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		ZIndex = 90,
+		ZIndex = 0, -- background layer: below the wallpaper (Z 1) and all chrome (Z 2+)
 	}, self._window)
 	self:_paintable(function()
 		self._shroud.BackgroundColor3 = Library.Theme.Window

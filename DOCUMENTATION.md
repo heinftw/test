@@ -1,4 +1,4 @@
-# xanax.ui — Documentation (Library v2.0.1)
+# xanax.ui — Documentation (Library v2.0.2)
 
 Reusable executor UI library for Roblox. Ground-up rewrite of the original
 one-off `xanax | native Roblox UI | version 1` script. This document matches the
@@ -19,7 +19,7 @@ code in `Library`, `Save Manager` and `example.lua` exactly.
 
 | Member | Description |
 | --- | --- |
-| `Library.Version` | `"2.0.1"` |
+| `Library.Version` | `"2.0.2"` |
 | `Library.Flags` | Table `flag -> current value` across all windows. |
 | `Library.Windows` | Created windows in creation order. |
 | `Library.Theme` | 9 theme keys, each a `Color3`: `Window #111111`, `Panel #161616`, `Border #0a0a0a`, `Edge #1a1a1a`, `Text #c8c8c8`, `Muted #707070`, `Accent #50c7ce`, `Hover #1e1e1e`, `Press #252525`. |
